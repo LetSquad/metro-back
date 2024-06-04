@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: metro-back
+springdoc:
+  swagger-ui:
+    path: '/swagger-ui'
