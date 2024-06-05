@@ -91,4 +91,8 @@ class OrderService(
     fun deleteOrder(id: Long) {
         passengerOrderEntityRepository.deleteById(id)
     }
+
+    fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> {
+        TODO()
+    }
 }

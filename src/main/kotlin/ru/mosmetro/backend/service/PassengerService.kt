@@ -2,17 +2,22 @@ package ru.mosmetro.backend.service
 
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.NoSuchPassengerException
+import ru.mosmetro.backend.mapper.PassengerCategoryMapper
 import ru.mosmetro.backend.mapper.PassengerMapper
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
+import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
+import ru.mosmetro.backend.repository.PassengerCategoryEntityRepository
 import ru.mosmetro.backend.repository.PassengerEntityRepository
 
 @Service
 class PassengerService(
-    private val passengerMapper: PassengerMapper,
-    private val passengerEntityRepository: PassengerEntityRepository
+        private val passengerMapper: PassengerMapper,
+        private val passengerCategoryMapper: PassengerCategoryMapper,
+        private val passengerEntityRepository: PassengerEntityRepository,
+        private val passengerCategoryEntityRepository: PassengerCategoryEntityRepository
 ) {
     /**
      *
@@ -24,6 +29,18 @@ class PassengerService(
             .map { passengerMapper.entityToDomain(it) }
             .map { passengerMapper.domainToDto(it) }
         return ListWithTotal(passengerDTOList.size, passengerDTOList)
+    }
+
+    /**
+     *
+     * Метод возвращает список всех категорий пассажиров в системе
+     *
+     * */
+    fun getPassengerCategories(): ListWithTotal<PassengerCategoryDTO> {
+        val passengerCategoryDTOList = passengerCategoryEntityRepository.findAll()
+            .map { passengerCategoryMapper.entityToDomain(it) }
+            .map { passengerCategoryMapper.domainToDto(it) }
+        return ListWithTotal(passengerCategoryDTOList.size, passengerCategoryDTOList)
     }
 
     /**

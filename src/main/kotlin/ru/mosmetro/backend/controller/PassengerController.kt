@@ -3,16 +3,10 @@ package ru.mosmetro.backend.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
+import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
 import ru.mosmetro.backend.service.PassengerService
@@ -35,7 +29,7 @@ class PassengerController(
         summary = "Получение пассажира по его идентификатору"
     )
     @GetMapping("{id}")
-    fun getPassengerById(@Parameter(description = "ID заявки") @PathVariable id: Long): PassengerDTO {
+    fun getPassengerById(@Parameter(description = "ID пассажира") @PathVariable id: Long): PassengerDTO {
         return passengerService.getPassengerById(id)
     }
 
@@ -52,7 +46,7 @@ class PassengerController(
     )
     @PutMapping("{id}")
     fun updatePassenger(
-        @Parameter(description = "ID заявки") @PathVariable id: Long,
+        @Parameter(description = "ID пассажира") @PathVariable id: Long,
         @RequestBody updatePassengerDTO: UpdatePassengerDTO
     ): PassengerDTO {
         return passengerService.updatePassenger(id, updatePassengerDTO)
@@ -62,7 +56,15 @@ class PassengerController(
         summary = "Удаление пассажира по его идентификатору"
     )
     @DeleteMapping("{id}")
-    fun deletePassenger(@Parameter(description = "ID заявки") @PathVariable id: Long) {
+    fun deletePassenger(@Parameter(description = "ID пассажира") @PathVariable id: Long) {
         passengerService.deletePassenger(id)
+    }
+
+    @Operation(
+            summary = "Получение категорий пассажиров"
+    )
+    @GetMapping("/categories")
+    fun getPassengerCategories(): ListWithTotal<PassengerCategoryDTO> {
+        return passengerService.getPassengerCategories()
     }
 }

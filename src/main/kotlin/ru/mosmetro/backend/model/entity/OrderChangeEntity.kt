@@ -1,15 +1,9 @@
 package ru.mosmetro.backend.model.entity
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.SequenceGenerator
-import jakarta.persistence.Table
-import java.time.Instant
+import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
+import java.time.Instant
 
 @Entity
 @Table(name = "order_change")
@@ -30,6 +24,6 @@ data class OrderChangeEntity(
     @Column(name = "employee_login", length = Integer.MAX_VALUE)
     val employeeLogin: String?,
 
-    @Column(name = "time_edit")
-    val timeEdit: Instant?
+    @Column(name = "created_at")
+    val createdAt: Instant?
 )

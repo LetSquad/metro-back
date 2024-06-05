@@ -3,8 +3,11 @@ package ru.mosmetro.backend.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import ru.mosmetro.backend.model.dto.AuthDTO
+import ru.mosmetro.backend.model.dto.SignInDTO
 import ru.mosmetro.backend.service.AuthService
 
 @Tag(name = "Методы авторизации")
@@ -17,7 +20,7 @@ class AuthController(
         summary = "Авторизация"
     )
     @PostMapping
-    fun auth(): String {
+    fun auth(@RequestBody signInDTO: SignInDTO): AuthDTO {
         return authService.auth()
     }
 
@@ -25,7 +28,7 @@ class AuthController(
         summary = "Обновление токена"
     )
     @PostMapping("refresh")
-    fun refresh(): String {
+    fun refresh(): AuthDTO {
         return authService.refresh()
     }
 }

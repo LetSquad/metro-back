@@ -1,12 +1,6 @@
 package ru.mosmetro.backend.model.entity
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.SequenceGenerator
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.time.LocalTime
 
 @Entity
@@ -36,7 +30,7 @@ data class EmployeeEntity(
     @Column(name = "work_finish")
     val workFinish: LocalTime,
 
-    @Column(name = "shift_time", length = Integer.MAX_VALUE)
+    @Column(name = "shift_type", length = Integer.MAX_VALUE)
     val shiftType: String,
 
     @Column(name = "work_phone", length = Integer.MAX_VALUE)

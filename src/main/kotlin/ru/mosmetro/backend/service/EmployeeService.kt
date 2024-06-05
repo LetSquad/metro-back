@@ -3,16 +3,22 @@ package ru.mosmetro.backend.service
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.EntityNotFoundException
 import ru.mosmetro.backend.mapper.EmployeeMapper
+import ru.mosmetro.backend.mapper.EmployeeRankMapper
+import ru.mosmetro.backend.mapper.EmployeeShiftMapper
 import ru.mosmetro.backend.model.dto.ListWithTotal
-import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
-import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
-import ru.mosmetro.backend.model.dto.employee.UpdateEmployeeDTO
+import ru.mosmetro.backend.model.dto.employee.*
 import ru.mosmetro.backend.repository.EmployeeEntityRepository
+import ru.mosmetro.backend.repository.EmployeeRankEntityRepository
+import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
 
 @Service
 class EmployeeService(
-    private val employeeEntityRepository: EmployeeEntityRepository,
-    private val employeeMapper: EmployeeMapper
+        private val employeeEntityRepository: EmployeeEntityRepository,
+        private val employeeRankEntityRepository: EmployeeRankEntityRepository,
+        private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
+        private val employeeMapper: EmployeeMapper,
+        private val employeeRankMapper: EmployeeRankMapper,
+        private val employeeShiftMapper: EmployeeShiftMapper
 ) {
     /**
      *
@@ -25,6 +31,34 @@ class EmployeeService(
         val employeeDTOList = employeeEntityRepository.findAll()
             .map { employeeMapper.entityToDomain(it) }
             .map { employeeMapper.domainToDto(it) }
+        return ListWithTotal(employeeDTOList.size, employeeDTOList)
+    }
+
+    /**
+     *
+     * Метод получает всех должностей рабочих
+     *
+     * @return список сущностей EmployeeRankDTO в которых предоставлена информация о рабочих
+     *
+     * */
+    fun getAllEmployeeRanks(): ListWithTotal<EmployeeRankDTO> {
+        val employeeDTOList = employeeRankEntityRepository.findAll()
+            .map { employeeRankMapper.entityToDomain(it) }
+            .map { employeeRankMapper.domainToDto(it) }
+        return ListWithTotal(employeeDTOList.size, employeeDTOList)
+    }
+
+    /**
+     *
+     * Метод получает всех должностей рабочих
+     *
+     * @return список сущностей EmployeeShiftDTO в которых предоставлена информация о рабочих
+     *
+     * */
+    fun getAllEmployeeShifts(): ListWithTotal<EmployeeShiftDTO> {
+        val employeeDTOList = employeeShiftEntityRepository.findAll()
+            .map { employeeShiftMapper.entityToDomain(it) }
+            .map { employeeShiftMapper.domainToDto(it) }
         return ListWithTotal(employeeDTOList.size, employeeDTOList)
     }
 

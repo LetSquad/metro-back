@@ -1,12 +1,6 @@
 package ru.mosmetro.backend.model.entity
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.SequenceGenerator
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.time.Instant
 
 @Entity
@@ -27,7 +21,7 @@ data class PassengerEntity(
     @Column(name = "middle_name", length = Integer.MAX_VALUE)
     val middleName: String?,
 
-    @Column(name = "sex_name", length = Integer.MAX_VALUE)
+    @Column(name = "sex", length = Integer.MAX_VALUE)
     val sex: String,
 
     @Column(name = "comment", length = Integer.MAX_VALUE)
@@ -38,7 +32,4 @@ data class PassengerEntity(
 
     @Column(name = "created_at")
     val createdAt: Instant,
-
-    @Column(name = "deleted_at")
-    val deletedAt: Instant?
 )
