@@ -1,8 +1,8 @@
 package ru.mosmetro.backend.model.dto.employee
 
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalTime
 import ru.mosmetro.backend.model.enums.SexType
+import java.time.LocalTime
 
 data class UpdateEmployeeDTO(
     @Schema(description = "Имя рабочего")
@@ -22,9 +22,9 @@ data class UpdateEmployeeDTO(
     @Schema(description = "Рабочий телефон")
     val workPhone: String,
     @Schema(description = "Личный телефон")
-    val personalPhone: String?,
+    val personalPhone: String,
     @Schema(description = "Номер рабочего")
-    val employeeNumber: Long?,
+    val employeeNumber: Long,
     @Schema(description = "Флаг легких работ")
-    val lightDuties: Boolean?,
+    val lightDuties: Boolean,
 )

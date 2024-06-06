@@ -37,11 +37,15 @@ data class EmployeeEntity(
     val workPhone: String,
 
     @Column(name = "personal_phone", length = Integer.MAX_VALUE)
-    val personalPhone: String?,
+    val personalPhone: String,
 
     @Column(name = "employee_number")
-    val employeeNumber: Long?,
+    val employeeNumber: Long,
 
     @Column(name = "light_duties")
-    val lightDuties: Boolean?
+    val lightDuties: Boolean,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rank_code")
+    val rank: EmployeeRankEntity
 )

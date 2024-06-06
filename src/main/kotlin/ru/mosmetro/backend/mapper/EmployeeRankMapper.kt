@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.EmployeeRank
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.entity.EmployeeRankEntity
+import ru.mosmetro.backend.model.enums.EmployeeRoleType
 
 @Component
 class EmployeeRankMapper {
@@ -18,6 +19,13 @@ class EmployeeRankMapper {
             code = mapper.code,
             name = mapper.name,
             shortName = mapper.shortName,
-            role = mapper.role,
+            role = EmployeeRoleType.valueOf(mapper.role),
+    )
+
+    fun dtoToDomain(mapper: EmployeeRankDTO) = EmployeeRank(
+            code = mapper.code,
+            name = mapper.name,
+            shortName = mapper.shortName,
+            role = mapper.role.name,
     )
 }
