@@ -1,12 +1,10 @@
 spring:
   application:
     name: metro-back
-springdoc:
   datasource:
-    url: 'jdbc:postgresql://localhost:5432/metro'
+    url: 'jdbc:postgresql://localhost:5432/metro_back'
     username: 'postgres'
-    password: 'Orion123'
-    hikari:
-      catalog: 'metro'
+    password: 'postgres'
+springdoc:
   swagger-ui:
     path: '/swagger-ui'

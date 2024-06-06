@@ -2,7 +2,7 @@ create table passenger_category
 (
     code text primary key,
     name text not null,
-    created_at timestamp not null default current_timestamp,
+    created_at timestamp not null default current_timestamp
 );
 
 CREATE SEQUENCE passenger_id_seq START 1;
@@ -19,6 +19,7 @@ create table passenger
     category_code text not null,
     created_at    timestamp not null default current_timestamp,
     updated_at    timestamp,
+    deleted_at    timestamp,
     FOREIGN KEY (category_code) REFERENCES passenger_category (code)
 );
 
@@ -38,14 +39,14 @@ create table order_status
 (
     code       text primary key,
     name       text not null,
-    created_at timestamp not null default current_timestamp,
+    created_at timestamp not null default current_timestamp
 );
 
 create table metro_line
 (
     id         bigint primary key,
     name       text not null,
-    created_at timestamp not null default current_timestamp,
+    created_at timestamp not null default current_timestamp
 );
 
 CREATE SEQUENCE metro_line_id_seq START 1;
@@ -90,9 +91,10 @@ create table passenger_order
 
     start_station_id      bigint,
     finish_station_id     bigint,
-    created_at            timestamp,
 
+    created_at            timestamp not null default current_timestamp,
     updated_at            timestamp,
+    deleted_at            timestamp,
     FOREIGN KEY (order_status_code) REFERENCES order_status (code),
     FOREIGN KEY (passenger_id) REFERENCES passenger (id),
     FOREIGN KEY (passenger_category) REFERENCES passenger_category (code),
@@ -108,8 +110,8 @@ create table order_change
     order_change_code text not null,
     order_change_log  jsonb not null,
     employee_login    text not null,
-    created_at        timestamp not null default current_timestamp,
     order_id          bigint not null,
+    created_at        timestamp not null default current_timestamp,
     FOREIGN KEY (order_id) REFERENCES passenger_order (id)
 );
 
@@ -121,6 +123,7 @@ create table metro_station_transfer
     finish_station_id bigint,
     duration          interval not null,
     is_crosswalking   boolean not null,
+    created_at        timestamp not null default current_timestamp,
     FOREIGN KEY (start_station_id) REFERENCES metro_station (id),
     FOREIGN KEY (finish_station_id) REFERENCES metro_station (id),
     PRIMARY KEY (start_station_id, finish_station_id)
@@ -130,16 +133,18 @@ create table employee_rank
 (
     code       text primary key,
     name       text not null,
-    short_name text not null,
-    role       text not null
+    short_name text,
+    role       text not null,
+    created_at timestamp not null default current_timestamp
 );
 
 create table metro_user
 (
     id                    bigint primary key,
-    login                 text not null,
+    login                 text unique not null,
     password              text not null,
-    is_password_temporary boolean not null
+    is_password_temporary boolean not null,
+    created_at            timestamp not null default current_timestamp
 );
 
 CREATE SEQUENCE metro_user_id_seq START 1;
@@ -156,10 +161,13 @@ create table employee
     shift_type      text not null,
     work_phone      text,
     personal_phone  text,
-    employee_number bigint not null,
+    employee_number bigint unique not null,
     light_duties    boolean not null,
     rank_code       text not null,
     user_id         bigint not null,
+    created_at      timestamp not null default current_timestamp,
+    updated_at      timestamp,
+    deleted_at      timestamp,
     FOREIGN KEY (rank_code) REFERENCES employee_rank (code),
     FOREIGN KEY (user_id) REFERENCES metro_user (id)
 );
@@ -173,6 +181,7 @@ create table employee_shift
     work_start  time not null,
     work_finish time not null,
     employee_id bigint not null,
+    created_at  timestamp not null default current_timestamp,
     FOREIGN KEY (employee_id) REFERENCES employee (id)
 );
 
@@ -183,8 +192,8 @@ create table employee_shift_order
     employee_shift_id bigint,
     order_id          bigint,
     is_attached       boolean not null,
+    created_at        timestamp not null default current_timestamp,
     FOREIGN KEY (employee_shift_id) REFERENCES employee_shift (id),
     FOREIGN KEY (order_id) REFERENCES passenger_order (id),
     PRIMARY KEY (employee_shift_id, order_id)
 );
-
