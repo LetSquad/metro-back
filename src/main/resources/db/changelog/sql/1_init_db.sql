@@ -1,7 +1,9 @@
 create table passenger_category
 (
-    code text primary key,
-    name text not null,
+    code       text primary key,
+    name       text not null,
+    short_name text not null,
+    comment    text,
     created_at timestamp not null default current_timestamp
 );
 
@@ -15,7 +17,7 @@ create table passenger
     middle_name   text,
     sex           text not null,
     comment       text,
-    has_pacemaker boolean,
+    has_pacemaker boolean not null default false,
     category_code text not null,
     created_at    timestamp not null default current_timestamp,
     updated_at    timestamp,
@@ -46,6 +48,7 @@ create table metro_line
 (
     id         bigint primary key,
     name       text not null,
+    color      text not null,
     created_at timestamp not null default current_timestamp
 );
 
@@ -75,7 +78,7 @@ create table passenger_order
 
     male_employee_count   integer not null,
     female_employee_count integer not null,
-    baggage               jsonb not null,
+    baggage               jsonb,
 
     additional_info       text,
     order_time            timestamp not null,
@@ -89,8 +92,8 @@ create table passenger_order
     passenger_id          bigint not null,
     passenger_category    text,
 
-    start_station_id      bigint,
-    finish_station_id     bigint,
+    start_station_id      bigint not null,
+    finish_station_id     bigint not null,
 
     created_at            timestamp not null default current_timestamp,
     updated_at            timestamp,
