@@ -48,6 +48,7 @@ create table metro_line
 (
     id         bigint primary key,
     name       text not null,
+    color      text not null,
     created_at timestamp not null default current_timestamp
 );
 
