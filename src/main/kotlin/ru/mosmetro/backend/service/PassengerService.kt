@@ -71,7 +71,7 @@ class PassengerService(
     fun createPassenger(newPassengerDTO: NewPassengerDTO): PassengerDTO {
         return newPassengerDTO
             .let { passengerMapper.dtoToDomain(it) }
-            .let { passengerMapper.domainToEntity(it) }
+            .let { passengerMapper.domainToEntity(it, newPassengerDTO.category.name) }
             .let { passengerEntityRepository.save(it) }
             .let { passengerMapper.entityToDomain(it) }
             .let { passengerMapper.domainToDto(it) }
@@ -93,7 +93,7 @@ class PassengerService(
 
         return updatePassengerDTO
             .let { passengerMapper.dtoToDomain(it, id, passengerEntity.createdAt) }
-            .let { passengerMapper.domainToEntity(it) }
+            .let { passengerMapper.domainToEntity(it, passengerEntity.category.name) }
             .let { passengerEntityRepository.save(it) }
             .let { passengerMapper.entityToDomain(it) }
             .let { passengerMapper.domainToDto(it) }

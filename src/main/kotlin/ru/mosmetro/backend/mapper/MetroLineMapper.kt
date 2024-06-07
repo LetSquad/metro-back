@@ -16,4 +16,14 @@ class MetroLineMapper {
             id = mapper.id,
             name = mapper.name,
     )
+
+    fun domainToEntity(mapper: MetroLine) = MetroLineEntity(
+        id = mapper.id,
+        name = mapper.name,
+    )
+
+    fun dtoToDomain(mapper: MetroLineDTO) = MetroLine(
+        id = mapper.id,
+        name = mapper.name,
+    )
 }

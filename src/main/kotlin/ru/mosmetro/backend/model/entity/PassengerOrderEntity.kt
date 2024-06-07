@@ -13,6 +13,8 @@ import jakarta.persistence.Table
 import java.time.Instant
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
+import org.postgresql.util.PGInterval
+import org.postgresql.util.PGobject
 
 @Entity
 @Table(name = "passenger_order")
@@ -29,31 +31,28 @@ data class PassengerOrderEntity(
     @Column(name = "finish_description", length = Integer.MAX_VALUE)
     val finishDescription: String?,
 
-    @Column(name = "order_application", length = Integer.MAX_VALUE)
-    val orderApplication: String?,
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "transfers")
-    val transfers: MutableMap<String, Any>?,
+    val transfers: PGobject,
 
     @Column(name = "passenger_count")
-    val passengerCount: Int?,
+    val passengerCount: Int,
 
     @Column(name = "male_employee_count")
-    val maleEmployeeCount: Int?,
+    val maleEmployeeCount: Int,
 
     @Column(name = "female_employee_count")
-    val femaleEmployeeCount: Int?,
+    val femaleEmployeeCount: Int,
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "baggage")
-    val baggage: MutableMap<String, Any>?,
+    val baggage: PGobject?,
 
     @Column(name = "additional_info", length = Integer.MAX_VALUE)
     val additionalInfo: String?,
 
     @Column(name = "order_time")
-    val orderTime: Instant?,
+    val orderTime: Instant,
 
     @Column(name = "start_time")
     val startTime: Instant?,
@@ -68,7 +67,7 @@ data class PassengerOrderEntity(
     val cancelTime: Instant?,
 
     @Column(name = "created_at")
-    val createdAt: Instant?,
+    val createdAt: Instant,
 
     @Column(name = "updated_at")
     val updatedAt: Instant?,
@@ -76,30 +75,26 @@ data class PassengerOrderEntity(
     @Column(name = "deleted_at")
     val deletedAt: Instant?,
 
+    @Column(name = "duration")
+    val duration: PGInterval,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_status_code")
-    val orderStatusCode: OrderStatusEntity?,
+    val orderStatusCode: OrderStatusEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passenger_id")
-    val passenger: PassengerEntity?,
+    val passenger: PassengerEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passenger_category")
-    val passengerCategory: PassengerCategoryEntity?,
+    val passengerCategory: PassengerCategoryEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "start_station_id")
-    val startStation: MetroStationEntity?,
+    val startStation: MetroStationEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "finish_station_id")
-    val finishStation: MetroStationEntity?
-
-    /*
-         TODO [JPA Buddy] create field to map the 'duration' column
-         Available actions: Define target Java type | Uncomment as is | Remove column mapping
-            @Column(name = "duration", columnDefinition = "interval(0, 0)")
-            val duration: Any? = null
-        */
+    val finishStation: MetroStationEntity,
 )

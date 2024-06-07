@@ -20,4 +20,16 @@ class MetroStationMapper(
             name = mapper.name,
             line = mapper.line?.let { metroLineMapper.domainToDto(it) },
     )
+
+    fun domainToEntity(mapper: MetroStation) = MetroStationEntity(
+        id = mapper.id,
+        name = mapper.name,
+        line = mapper.line?.let { metroLineMapper.domainToEntity(it) },
+    )
+
+    fun dtoToDomain(mapper: MetroStationDTO) = MetroStation(
+        id = mapper.id,
+        name = mapper.name,
+        line = mapper.line?.let { metroLineMapper.dtoToDomain(it) },
+    )
 }

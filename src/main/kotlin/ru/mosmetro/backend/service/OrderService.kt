@@ -69,12 +69,12 @@ class OrderService(
      *
      * */
     fun updateOrder(id: Long, updatedPassengerOrderDTO: UpdatedPassengerOrderDTO): PassengerOrderDTO {
-        passengerOrderEntityRepository.findById(id).orElseThrow {
+        val passengerOrderEntity = passengerOrderEntityRepository.findById(id).orElseThrow {
             NoSuchOrderException(id)
         }
 
         return updatedPassengerOrderDTO
-            .let { orderMapper.dtoToDomain(it) }
+            .let { orderMapper.dtoToDomain(it, passengerOrderEntity.createdAt) }
             .let { orderMapper.domainToEntity(it) }
             .let { passengerOrderEntityRepository.save(it) }
             .let { orderMapper.entityToDomain(it) }

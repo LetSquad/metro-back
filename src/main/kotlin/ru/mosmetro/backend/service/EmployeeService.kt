@@ -6,19 +6,25 @@ import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeRankMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftMapper
 import ru.mosmetro.backend.model.dto.ListWithTotal
-import ru.mosmetro.backend.model.dto.employee.*
+import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
+import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
+import ru.mosmetro.backend.model.dto.employee.UpdateEmployeeDTO
 import ru.mosmetro.backend.repository.EmployeeEntityRepository
 import ru.mosmetro.backend.repository.EmployeeRankEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
+import ru.mosmetro.backend.repository.MetroUserEntityRepository
 
 @Service
 class EmployeeService(
-        private val employeeEntityRepository: EmployeeEntityRepository,
-        private val employeeRankEntityRepository: EmployeeRankEntityRepository,
-        private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
-        private val employeeMapper: EmployeeMapper,
-        private val employeeRankMapper: EmployeeRankMapper,
-        private val employeeShiftMapper: EmployeeShiftMapper
+    private val employeeEntityRepository: EmployeeEntityRepository,
+    private val employeeRankEntityRepository: EmployeeRankEntityRepository,
+    private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
+    private val employeeMapper: EmployeeMapper,
+    private val employeeRankMapper: EmployeeRankMapper,
+    private val employeeShiftMapper: EmployeeShiftMapper,
+    private val metroUserEntityRepository: MetroUserEntityRepository
 ) {
     /**
      *
@@ -72,7 +78,7 @@ class EmployeeService(
      * */
     fun getEmployeeById(id: Long): EmployeeDTO {
         return employeeEntityRepository.findById(id)
-            .orElseThrow { EntityNotFoundException(id) }
+            .orElseThrow { EntityNotFoundException(id.toString()) }
             .let { employeeMapper.entityToDomain(it) }
             .let { employeeMapper.domainToDto(it) }
     }
@@ -86,9 +92,15 @@ class EmployeeService(
      *
      * */
     fun createEmployee(newEmployeeDTO: NewEmployeeDTO): EmployeeDTO {
+        val employeeRank = employeeRankEntityRepository.findById(newEmployeeDTO.rankCode)
+            .orElseThrow { EntityNotFoundException(newEmployeeDTO.rankCode) }
+            .let { employeeRankMapper.entityToDomain(it) }
+            .let { employeeRankMapper.domainToDto(it) }
+        val userEntity = metroUserEntityRepository.findByLogin(newEmployeeDTO.workPhone)
+            .orElseThrow { EntityNotFoundException(newEmployeeDTO.workPhone) }
         return newEmployeeDTO
-            .let { employeeMapper.dtoToDomain(it) }
-            .let { employeeMapper.domainToEntity(it) }
+            .let { employeeMapper.dtoToDomain(it, employeeRank) }
+            .let { employeeMapper.domainToEntity(it, userEntity) }
             .let { employeeEntityRepository.save(it) }
             .let { employeeMapper.entityToDomain(it) }
             .let { employeeMapper.domainToDto(it) }
@@ -104,12 +116,16 @@ class EmployeeService(
      *
      * */
     fun updateEmployee(id: Long, updateEmployeeDTO: UpdateEmployeeDTO): EmployeeDTO {
-        employeeEntityRepository.findById(id)
-            .orElseThrow { EntityNotFoundException(id) }
+        val employeeEntity = employeeEntityRepository.findById(id)
+            .orElseThrow { EntityNotFoundException(id.toString()) }
+
+        val employeeRankDTO = employeeEntity.rank
+            .let { employeeRankMapper.entityToDomain(it) }
+            .let { employeeRankMapper.domainToDto(it) }
 
         return updateEmployeeDTO
-            .let { employeeMapper.dtoToDomain(updateEmployeeDTO, id) }
-            .let { employeeMapper.domainToEntity(it) }
+            .let { employeeMapper.dtoToDomain(updateEmployeeDTO, id, employeeRankDTO) }
+            .let { employeeMapper.domainToEntity(it, employeeEntity.user) }
             .let { employeeEntityRepository.save(it) }
             .let { employeeMapper.entityToDomain(it) }
             .let { employeeMapper.domainToDto(it) }

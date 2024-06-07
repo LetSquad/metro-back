@@ -1,18 +1,30 @@
 package ru.mosmetro.backend.model.dto.employee
 
+import io.swagger.v3.oas.annotations.media.Schema
 import ru.mosmetro.backend.model.enums.EmployeeRoleType
 import ru.mosmetro.backend.model.enums.SexType
 
 data class NewEmployeeDTO(
-        val employeeRole: EmployeeRoleType,
-        val workPhone: String,
-        val personalPhone: String,
-        val firstName: String,
-        val lastName: String,
-        val middleName: String?,
-        val sex: SexType,
-        val shift: String,
-        val employeeNumber: Long,
-        val lightDuties: Boolean,
-        val rankCode: String,
+    @Schema(description = "Роль сотрудника")
+    val employeeRole: EmployeeRoleType,
+    @Schema(description = "Рабочий телефон")
+    val workPhone: String,
+    @Schema(description = "Личный телефон")
+    val personalPhone: String,
+    @Schema(description = "Имя сотрудника")
+    val firstName: String,
+    @Schema(description = "Фамилия сотрудника")
+    val lastName: String,
+    @Schema(description = "Отчество сотрудника")
+    val middleName: String?,
+    @Schema(description = "Пол сотрудника")
+    val sex: SexType,
+    @Schema(description = "Тип смены")
+    val shift: String,
+    @Schema(description = "Номер сотрудника")
+    val employeeNumber: Long,
+    @Schema(description = "Флаг, обозначающий только легкие работы для сотрудника")
+    val lightDuties: Boolean,
+    @Schema(description = "Код ранга сотрудника")
+    val rankCode: String,
 )

@@ -3,7 +3,14 @@ package ru.mosmetro.backend.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
@@ -35,14 +42,6 @@ class OrderController(
     }
 
     @Operation(
-        summary = "Получение заявки по её идентификатору"
-    )
-    @GetMapping("{id}")
-    fun getOrderById(@Parameter(description = "ID заявки") @PathVariable id: Long): PassengerOrderDTO {
-        return orderService.getOrderById(id)
-    }
-
-    @Operation(
         summary = "Создание новой заявки"
     )
     @PostMapping
@@ -67,6 +66,14 @@ class OrderController(
     @DeleteMapping("{id}")
     fun deleteOrder(@Parameter(description = "ID заявки") @PathVariable id: Long) {
         orderService.deleteOrder(id)
+    }
+
+    @Operation(
+        summary = "Получение заявки по её идентификатору"
+    )
+    @GetMapping("{id}")
+    fun getOrderById(@Parameter(description = "ID заявки") @PathVariable id: Long): PassengerOrderDTO {
+        return orderService.getOrderById(id)
     }
 
     @Operation(

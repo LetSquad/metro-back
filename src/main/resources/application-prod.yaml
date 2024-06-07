@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: metro-back
+  datasource:
+    url: 'jdbc:postgresql://178.216.98.128:50777/metro_test_main'
+    username: 'soagshka'
+    password: ')3:.X4zrOO4jEc6#'
+  liquibase:
+    enabled: true
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher

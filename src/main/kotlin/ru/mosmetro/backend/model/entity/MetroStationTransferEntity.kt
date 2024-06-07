@@ -28,12 +28,8 @@ data class MetroStationTransferEntity(
     val finishStation: MetroStationEntity?,
 
     @Column(name = "is_crosswalking")
-    val isCrosswalking: Boolean?
+    val isCrosswalking: Boolean,
 
-    /*
-         TODO [JPA Buddy] create field to map the 'duration' column
-         Available actions: Define target Java type | Uncomment as is | Remove column mapping
-            @Column(name = "duration", columnDefinition = "interval(0, 0)")
-            val duration: Any? = null
-        */
+    @Column(name = "duration")
+    val duration: Int
 )
