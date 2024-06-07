@@ -32,4 +32,7 @@ data class PassengerEntity(
 
     @Column(name = "created_at")
     val createdAt: Instant,
+
+    @Column(name = "deleted_at")
+    val deletedAt: Instant?,
 )

@@ -29,7 +29,7 @@ class OrderController(
     @Operation(
         summary = "Получение всех заявок текущего пользователя"
     )
-    @GetMapping
+    @GetMapping("current")
     fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> {
         return orderService.getCurrentUserOrders()
     }
