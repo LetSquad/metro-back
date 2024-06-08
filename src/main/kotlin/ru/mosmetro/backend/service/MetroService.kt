@@ -8,8 +8,8 @@ import ru.mosmetro.backend.repository.MetroStationEntityRepository
 
 @Service
 class MetroService(
-        private val metroStationEntityRepository: MetroStationEntityRepository,
-        private val metroStationMapper: MetroStationMapper,
+    private val metroStationEntityRepository: MetroStationEntityRepository,
+    private val metroStationMapper: MetroStationMapper,
 ) {
     /**
      *
