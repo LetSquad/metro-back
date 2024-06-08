@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.model.domain
 
+import java.time.Duration
 import java.time.Instant
 
 data class PassengerOrder(
@@ -10,7 +11,7 @@ data class PassengerOrder(
     val passengerCount: Int,
     val maleEmployeeCount: Int,
     val femaleEmployeeCount: Int,
-    val duration: Double,
+    val duration: Duration,
     val additionalInfo: String?,
     val orderTime: Instant,
     val startTime: Instant?,

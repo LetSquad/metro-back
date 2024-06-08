@@ -15,7 +15,7 @@ data class NewPassengerOrderDTO(
     @Schema(description = "Способ приема заявки")
     val orderApplication: OrderApplicationDTO,
     @Schema(description = "Время заявки в секундах")
-    val duration: Double,
+    val duration: Long,
     @Schema(description = "Количество пассажиров")
     val passengerCount: Int,
     @Schema(description = "Количество работников мужского пола, нужное для данной заявки")

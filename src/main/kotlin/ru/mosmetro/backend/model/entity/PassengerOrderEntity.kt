@@ -10,10 +10,10 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.time.Duration
 import java.time.Instant
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import org.postgresql.util.PGInterval
 import org.postgresql.util.PGobject
 
 @Entity
@@ -75,8 +75,9 @@ data class PassengerOrderEntity(
     @Column(name = "deleted_at")
     val deletedAt: Instant?,
 
-    @Column(name = "duration")
-    val duration: PGInterval,
+    @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
+    @Column(name = "duration", columnDefinition = "interval")
+    val duration: Duration,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_status_code")

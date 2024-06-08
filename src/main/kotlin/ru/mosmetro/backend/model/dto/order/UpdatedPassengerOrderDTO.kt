@@ -33,7 +33,7 @@ data class UpdatedPassengerOrderDTO(
     @Schema(description = "Время отмены заявки")
     val cancelTime: Instant?,
     @Schema(description = "Время заявки в секундах")
-    val duration: Double,
+    val duration: Long,
     @Schema(description = "Статус заявки")
     val orderStatus: OrderStatusDTO,
     @Schema(description = "Пассажир")

@@ -2,8 +2,8 @@ package ru.mosmetro.backend.mapper
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.time.Duration
 import java.time.Instant
-import org.postgresql.util.PGInterval
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.MetroStationTransfer
 import ru.mosmetro.backend.model.domain.OrderApplication
@@ -62,7 +62,7 @@ class OrderMapper(
         createdAt = mapper.createdAt,
         updatedAt = mapper.updatedAt,
         deletedAt = mapper.deletedAt,
-        duration = mapper.duration.seconds
+        duration = mapper.duration
     )
 
     fun domainToDto(mapper: PassengerOrder) = PassengerOrderDTO(
@@ -86,7 +86,7 @@ class OrderMapper(
             mapper.baggage.type,
             mapper.baggage.weight, mapper.baggage.isHelpNeeded
         ) else null,
-        duration = mapper.duration,
+        duration = mapper.duration.toSeconds(),
         startStation = metroStationMapper.domainToDto(mapper.startMetroStation),
         finishStation = metroStationMapper.domainToDto(mapper.finishMetroStation),
         orderStatus = OrderStatusDTO(mapper.orderStatus.code, mapper.orderStatus.name),
@@ -131,7 +131,7 @@ class OrderMapper(
                 it
             )
         } else null,
-        duration = mapper.duration
+        duration = Duration.ofSeconds(mapper.duration)
     )
 
     fun dtoToDomain(mapper: UpdatedPassengerOrderDTO, createdAt: Instant) = PassengerOrder(
@@ -166,7 +166,7 @@ class OrderMapper(
                 it
             )
         } else null,
-        duration = mapper.duration
+        duration = Duration.ofSeconds(mapper.duration)
     )
 
     fun domainToEntity(mapper: PassengerOrder) = PassengerOrderEntity(
@@ -192,6 +192,6 @@ class OrderMapper(
         passenger = passengerMapper.domainToEntity(mapper.passenger, mapper.passenger.category.name),
         passengerCategory = passengerCategoryMapper.domainToEntity(mapper.passengerCategory),
         transfers = gson.toJson(mapper.transfers).toPGObject(),
-        duration = PGInterval(0, 0, 0, 0, 0, mapper.duration)
+        duration = mapper.duration
     )
 }
