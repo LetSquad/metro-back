@@ -11,13 +11,14 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
-import ru.mosmetro.backend.service.DistributionService
+import ru.mosmetro.backend.service.OrderDistributionService
 import ru.mosmetro.backend.service.MetroTransfersService
 import ru.mosmetro.backend.service.OrderService
 
@@ -27,14 +28,14 @@ import ru.mosmetro.backend.service.OrderService
 class OrderController(
     private val orderService: OrderService,
     private val transfersService: MetroTransfersService,
-    private val distributionService: DistributionService,
+    private val distributionService: OrderDistributionService,
 ) {
 
     @Operation(
         summary = "Получение всех заявок"
     )
     @GetMapping
-    fun getOrders(): ListWithTotal<PassengerOrderDTO> {
+    suspend fun getOrders(): ListWithTotal<PassengerOrderDTO> {
         return orderService.getOrders()
     }
 
@@ -42,7 +43,7 @@ class OrderController(
         summary = "Получение всех заявок текущего пользователя"
     )
     @GetMapping("current")
-    fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> {
+    suspend fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> {
         return orderService.getCurrentUserOrders()
     }
 
@@ -50,7 +51,7 @@ class OrderController(
         summary = "Создание новой заявки"
     )
     @PostMapping
-    fun createOrder(@RequestBody newPassengerOrderDTO: NewPassengerOrderDTO): PassengerOrderDTO {
+    suspend fun createOrder(@RequestBody newPassengerOrderDTO: NewPassengerOrderDTO): PassengerOrderDTO {
         return orderService.createOrder(newPassengerOrderDTO)
     }
 
@@ -58,7 +59,7 @@ class OrderController(
         summary = "Обновление заявки по её идентификатору"
     )
     @PutMapping("{id}")
-    fun updateOrder(
+    suspend fun updateOrder(
         @Parameter(description = "ID заявки") @PathVariable id: Long,
         @RequestBody updatedPassengerOrderDTO: UpdatedPassengerOrderDTO
     ): PassengerOrderDTO {
@@ -69,7 +70,7 @@ class OrderController(
         summary = "Удаление заявки по её идентификатору"
     )
     @DeleteMapping("{id}")
-    fun deleteOrder(@Parameter(description = "ID заявки") @PathVariable id: Long) {
+    suspend fun deleteOrder(@Parameter(description = "ID заявки") @PathVariable id: Long) {
         orderService.deleteOrder(id)
     }
 
@@ -77,7 +78,9 @@ class OrderController(
         summary = "Получение заявки по её идентификатору"
     )
     @GetMapping("{id}")
-    fun getOrderById(@Parameter(description = "ID заявки") @PathVariable id: Long): PassengerOrderDTO {
+    suspend fun getOrderById(
+        @Parameter(description = "ID заявки") @PathVariable id: Long
+    ): EntityForEdit<PassengerOrderDTO> {
         return orderService.getOrderById(id)
     }
 

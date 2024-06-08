@@ -3,7 +3,15 @@ package ru.mosmetro.backend.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
@@ -17,11 +25,12 @@ import ru.mosmetro.backend.service.PassengerService
 class PassengerController(
     private val passengerService: PassengerService
 ) {
+
     @Operation(
         summary = "Получение всех пассажиров"
     )
     @GetMapping
-    fun getPassengers(): ListWithTotal<PassengerDTO> {
+    suspend fun getPassengers(): ListWithTotal<PassengerDTO> {
         return passengerService.getPassengers()
     }
 
@@ -29,7 +38,9 @@ class PassengerController(
         summary = "Получение пассажира по его идентификатору"
     )
     @GetMapping("{id}")
-    fun getPassengerById(@Parameter(description = "ID пассажира") @PathVariable id: Long): PassengerDTO {
+    suspend fun getPassengerById(
+        @Parameter(description = "ID пассажира") @PathVariable id: Long
+    ): EntityForEdit<PassengerDTO> {
         return passengerService.getPassengerById(id)
     }
 
@@ -37,7 +48,7 @@ class PassengerController(
         summary = "Создание нового пассажира"
     )
     @PostMapping
-    fun createPassenger(@RequestBody newPassengerDTO: NewPassengerDTO): PassengerDTO {
+    suspend fun createPassenger(@RequestBody newPassengerDTO: NewPassengerDTO): PassengerDTO {
         return passengerService.createPassenger(newPassengerDTO)
     }
 
@@ -45,7 +56,7 @@ class PassengerController(
         summary = "Обновление пассажира по его идентификатору"
     )
     @PutMapping("{id}")
-    fun updatePassenger(
+    suspend fun updatePassenger(
         @Parameter(description = "ID пассажира") @PathVariable id: Long,
         @RequestBody updatePassengerDTO: UpdatePassengerDTO
     ): PassengerDTO {
@@ -56,7 +67,7 @@ class PassengerController(
         summary = "Удаление пассажира по его идентификатору"
     )
     @DeleteMapping("{id}")
-    fun deletePassenger(@Parameter(description = "ID пассажира") @PathVariable id: Long) {
+    suspend fun deletePassenger(@Parameter(description = "ID пассажира") @PathVariable id: Long) {
         passengerService.deletePassenger(id)
     }
 
@@ -64,7 +75,7 @@ class PassengerController(
             summary = "Получение категорий пассажиров"
     )
     @GetMapping("/categories")
-    fun getPassengerCategories(): ListWithTotal<PassengerCategoryDTO> {
+    suspend fun getPassengerCategories(): ListWithTotal<PassengerCategoryDTO> {
         return passengerService.getPassengerCategories()
     }
 }
