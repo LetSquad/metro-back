@@ -3,7 +3,6 @@ package ru.mosmetro.backend.mapper
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.MetroStationTransfer
 import ru.mosmetro.backend.model.dto.metro.MetroStationTransferDTO
-import ru.mosmetro.backend.model.entity.MetroStationEntity
 import ru.mosmetro.backend.model.entity.MetroStationTransferEntity
 
 @Component
@@ -11,12 +10,10 @@ class MetroStationTransferMapper(
     private val metroStationMapper: MetroStationMapper
 ) {
     fun entityToDomain(
-        mapper: MetroStationTransferEntity,
-        startMetroStation: MetroStationEntity,
-        finishMetroStation: MetroStationEntity
+        mapper: MetroStationTransferEntity
     ) = MetroStationTransfer(
-        startStation = metroStationMapper.entityToDomain(startMetroStation),
-        finishStation = metroStationMapper.entityToDomain(finishMetroStation),
+        startStation = metroStationMapper.entityToDomain(mapper.startStation),
+        finishStation = metroStationMapper.entityToDomain(mapper.finishStation),
         duration = mapper.duration,
         isCrosswalking = mapper.isCrosswalking
     )

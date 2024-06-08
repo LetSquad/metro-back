@@ -6,5 +6,7 @@ data class MetroLineDTO(
     @Schema(description = "Идентификатор")
     val id: Long?,
     @Schema(description = "Наименование линии")
-    val name: String?,
+    val name: String,
+    @Schema(description = "Цвет линии")
+    val color: String,
 )

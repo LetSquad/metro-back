@@ -9,6 +9,9 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.time.Duration
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(name = "metro_station_transfer")
@@ -20,16 +23,17 @@ data class MetroStationTransferEntity(
     @MapsId("startStationId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "start_station_id", nullable = false)
-    val startStation: MetroStationEntity?,
+    val startStation: MetroStationEntity,
 
     @MapsId("finishStationId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "finish_station_id", nullable = false)
-    val finishStation: MetroStationEntity?,
+    val finishStation: MetroStationEntity,
 
     @Column(name = "is_crosswalking")
     val isCrosswalking: Boolean,
 
-    @Column(name = "duration")
-    val duration: Int
+    @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
+    @Column(name = "duration", columnDefinition = "interval")
+    val duration: Duration
 )

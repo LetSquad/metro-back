@@ -18,5 +18,8 @@ data class MetroLineEntity(
     val id: Long?,
 
     @Column(name = "name", length = Integer.MAX_VALUE)
-    val name: String?
+    val name: String,
+
+    @Column(name = "color")
+    val color: String
 ) 
