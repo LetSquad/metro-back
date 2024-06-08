@@ -13,18 +13,23 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
+import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
 import ru.mosmetro.backend.service.DistributionService
+import ru.mosmetro.backend.service.MetroTransfersService
 import ru.mosmetro.backend.service.OrderService
 
 @Tag(name = "Методы работы с заявками")
 @RestController
 @RequestMapping("/api/orders")
 class OrderController(
-        private val orderService: OrderService,
-        private val distributionService: DistributionService,
+    private val orderService: OrderService,
+    private val transfersService: MetroTransfersService,
+    private val distributionService: DistributionService,
 ) {
+
     @Operation(
         summary = "Получение всех заявок"
     )
@@ -77,15 +82,15 @@ class OrderController(
     }
 
     @Operation(
-            summary = "Рассчет маршрута по заявки"
+        summary = "Расчет маршрута по заявки"
     )
-    @PostMapping("/calculations")
-    fun calculateOrder(@RequestBody passengerOrderDTO: PassengerOrderDTO): PassengerOrderDTO {
-        return distributionService.calculateOrder(passengerOrderDTO)
+    @PostMapping("/transfers-calculation")
+    fun calculateOrder(@RequestBody request: OrderTransfersRequestDTO): OrderTransfersResponseDTO {
+        return transfersService.calculateTransfers(request)
     }
 
     @Operation(
-            summary = "Рассчет маршрута по заявки"
+        summary = "Распределение заявок"
     )
     @PostMapping("/distribution")
     fun calculateOrderDistribution(): PassengerOrderDTO {

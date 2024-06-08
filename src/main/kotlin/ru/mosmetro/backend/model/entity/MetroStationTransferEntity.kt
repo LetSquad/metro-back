@@ -9,9 +9,9 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
-import java.time.Duration
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
+import java.time.Duration
 
 @Entity
 @Table(name = "metro_station_transfer")
