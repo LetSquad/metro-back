@@ -1,7 +1,6 @@
 package ru.mosmetro.backend.model.domain
 
-data class MetroLine(
-    val id: Long?,
+data class OrderApplication(
+    val code: String,
     val name: String,
-    val color: String
 )

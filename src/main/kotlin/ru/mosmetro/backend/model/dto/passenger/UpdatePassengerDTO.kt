@@ -2,6 +2,7 @@ package ru.mosmetro.backend.model.dto.passenger
 
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
+import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 
 data class UpdatePassengerDTO(
@@ -19,4 +20,6 @@ data class UpdatePassengerDTO(
     val hasPacemaker: Boolean?,
     @Schema(description = "Время удаления пассажира")
     val deletedAt: Instant?,
+    @Schema(description = "Категория пассажира")
+    val category: PassengerCategoryType
 )

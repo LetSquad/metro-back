@@ -28,4 +28,12 @@ class EmployeeRankMapper {
             shortName = mapper.shortName,
             role = mapper.role.name,
     )
+
+    fun domainToEntity(mapper: EmployeeRank) = EmployeeRankEntity(
+        code = mapper.code,
+        name = mapper.name,
+        shortName = mapper.shortName,
+        role = mapper.role,
+    )
+
 }

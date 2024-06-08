@@ -1,114 +1,197 @@
 package ru.mosmetro.backend.mapper
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.time.Instant
+import org.postgresql.util.PGInterval
 import org.springframework.stereotype.Component
+import ru.mosmetro.backend.model.domain.MetroStationTransfer
+import ru.mosmetro.backend.model.domain.OrderApplication
+import ru.mosmetro.backend.model.domain.OrderBaggage
+import ru.mosmetro.backend.model.domain.OrderStatus
 import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.OrderApplicationDTO
+import ru.mosmetro.backend.model.dto.order.OrderBaggageDTO
+import ru.mosmetro.backend.model.dto.order.OrderStatusDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
+import ru.mosmetro.backend.model.entity.OrderStatusEntity
 import ru.mosmetro.backend.model.entity.PassengerOrderEntity
+import ru.mosmetro.backend.model.enums.OrderStatusType
+import ru.mosmetro.backend.util.toPGObject
 
 @Component
-class OrderMapper {
-    fun entityToDomain(passengerOrderEntity: PassengerOrderEntity) = PassengerOrder(
-        id = passengerOrderEntity.id,
-        startDescription = passengerOrderEntity.startDescription,
-        finishDescription = passengerOrderEntity.finishDescription,
-        orderApplication = passengerOrderEntity.orderApplication,
-        passengerCount = passengerOrderEntity.passengerCount,
-        maleEmployeeCount = passengerOrderEntity.maleEmployeeCount,
-        femaleEmployeeCount = passengerOrderEntity.femaleEmployeeCount,
-        additionalInfo = passengerOrderEntity.additionalInfo,
-        orderTime = passengerOrderEntity.orderTime,
-        startTime = passengerOrderEntity.startTime,
-        finishTime = passengerOrderEntity.finishTime,
-        absenceTime = passengerOrderEntity.absenceTime,
-        cancelTime = passengerOrderEntity.cancelTime,
-        createdAt = passengerOrderEntity.createdAt,
-        updatedAt = passengerOrderEntity.updatedAt,
-        deletedAt = passengerOrderEntity.deletedAt
+class OrderMapper(
+    private val metroStationMapper: MetroStationMapper,
+    private val metroStationTransferMapper: MetroStationTransferMapper,
+    private val passengerMapper: PassengerMapper,
+    private val passengerCategoryMapper: PassengerCategoryMapper,
+    private val gson: Gson
+) {
+    fun entityToDomain(mapper: PassengerOrderEntity) = PassengerOrder(
+        id = mapper.id,
+        startDescription = mapper.startDescription,
+        finishDescription = mapper.finishDescription,
+        orderApplication = OrderApplication(
+            mapper.orderStatusCode.code,
+            mapper.orderStatusCode.name
+        ),
+        passengerCount = mapper.passengerCount,
+        maleEmployeeCount = mapper.maleEmployeeCount,
+        femaleEmployeeCount = mapper.femaleEmployeeCount,
+        additionalInfo = mapper.additionalInfo,
+        orderTime = mapper.orderTime,
+        startTime = mapper.startTime,
+        finishTime = mapper.finishTime,
+        absenceTime = mapper.absenceTime,
+        cancelTime = mapper.cancelTime,
+        baggage = gson.fromJson(
+            mapper.baggage?.value,
+            object : TypeToken<Collection<OrderBaggage?>?>() {}.type
+        ),
+        startMetroStation = metroStationMapper.entityToDomain(mapper.startStation),
+        finishMetroStation = metroStationMapper.entityToDomain(mapper.finishStation),
+        orderStatus = OrderStatus(OrderStatusType.valueOf(mapper.orderStatusCode.code), mapper.orderStatusCode.name),
+        passenger = passengerMapper.entityToDomain(mapper.passenger),
+        passengerCategory = passengerCategoryMapper.entityToDomain(mapper.passengerCategory),
+        transfers = gson.fromJson(
+            mapper.baggage?.value ?: "[]",
+            object : TypeToken<Collection<MetroStationTransfer?>?>() {}.type
+        ),
+        createdAt = mapper.createdAt,
+        updatedAt = mapper.updatedAt,
+        deletedAt = mapper.deletedAt,
+        duration = mapper.duration.seconds
     )
 
-    fun domainToDto(passengerOrder: PassengerOrder) = PassengerOrderDTO(
-        id = passengerOrder.id,
-        startDescription = passengerOrder.startDescription,
-        finishDescription = passengerOrder.finishDescription,
-        orderApplication = passengerOrder.orderApplication,
-        passengerCount = passengerOrder.passengerCount,
-        maleEmployeeCount = passengerOrder.maleEmployeeCount,
-        femaleEmployeeCount = passengerOrder.femaleEmployeeCount,
-        additionalInfo = passengerOrder.additionalInfo,
-        orderTime = passengerOrder.orderTime,
-        startTime = passengerOrder.startTime,
-        finishTime = passengerOrder.finishTime,
-        absenceTime = passengerOrder.absenceTime,
-        cancelTime = passengerOrder.cancelTime,
-        createdAt = passengerOrder.createdAt,
-        updatedAt = passengerOrder.updatedAt,
-        deletedAt = passengerOrder.deletedAt
+    fun domainToDto(mapper: PassengerOrder) = PassengerOrderDTO(
+        id = mapper.id,
+        startDescription = mapper.startDescription,
+        finishDescription = mapper.finishDescription,
+        orderApplication = OrderApplicationDTO(
+            mapper.orderApplication.code,
+            mapper.orderApplication.name
+        ),
+        passengerCount = mapper.passengerCount,
+        maleEmployeeCount = mapper.maleEmployeeCount,
+        femaleEmployeeCount = mapper.femaleEmployeeCount,
+        additionalInfo = mapper.additionalInfo,
+        orderTime = mapper.orderTime,
+        startTime = mapper.startTime,
+        finishTime = mapper.finishTime,
+        absenceTime = mapper.absenceTime,
+        cancelTime = mapper.cancelTime,
+        baggage = if (mapper.baggage != null) OrderBaggageDTO(
+            mapper.baggage.type,
+            mapper.baggage.weight, mapper.baggage.isHelpNeeded
+        ) else null,
+        duration = mapper.duration,
+        startStation = metroStationMapper.domainToDto(mapper.startMetroStation),
+        finishStation = metroStationMapper.domainToDto(mapper.finishMetroStation),
+        orderStatus = OrderStatusDTO(mapper.orderStatus.code, mapper.orderStatus.name),
+        passenger = passengerMapper.domainToDto(mapper.passenger),
+        passengerCategory = passengerCategoryMapper.domainToDto(mapper.passengerCategory),
+        transfers = if (mapper.transfers != null) mapper.transfers.map {
+            metroStationTransferMapper.domainToDto(
+                it
+            )
+        } else null
     )
 
-    fun dtoToDomain(newPassengerOrderDTO: NewPassengerOrderDTO) = PassengerOrder(
+    fun dtoToDomain(mapper: NewPassengerOrderDTO) = PassengerOrder(
         id = null,
-        startDescription = newPassengerOrderDTO.startDescription,
-        finishDescription = newPassengerOrderDTO.finishDescription,
-        orderApplication = newPassengerOrderDTO.orderApplication,
-        passengerCount = newPassengerOrderDTO.passengerCount,
-        maleEmployeeCount = newPassengerOrderDTO.maleEmployeeCount,
-        femaleEmployeeCount = newPassengerOrderDTO.femaleEmployeeCount,
-        additionalInfo = newPassengerOrderDTO.additionalInfo,
-        orderTime = newPassengerOrderDTO.orderTime,
-        startTime = newPassengerOrderDTO.startTime,
-        finishTime = newPassengerOrderDTO.finishTime,
+        startDescription = mapper.startDescription,
+        finishDescription = mapper.finishDescription,
+        orderApplication = OrderApplication(mapper.orderApplication.code, mapper.orderApplication.name),
+        passengerCount = mapper.passengerCount,
+        maleEmployeeCount = mapper.maleEmployeeCount,
+        femaleEmployeeCount = mapper.femaleEmployeeCount,
+        additionalInfo = mapper.additionalInfo,
+        orderTime = mapper.orderTime,
+        startTime = mapper.startTime,
+        finishTime = mapper.finishTime,
         absenceTime = null,
         cancelTime = null,
-        createdAt = null,
+        createdAt = Instant.now(),
         updatedAt = null,
-        deletedAt = null
+        deletedAt = null,
+        baggage = if (mapper.baggage != null) OrderBaggage(
+            mapper.baggage.type,
+            mapper.baggage.weight,
+            mapper.baggage.isHelpNeeded
+        ) else null,
+        startMetroStation = metroStationMapper.dtoToDomain(mapper.startMetroStation),
+        finishMetroStation = metroStationMapper.dtoToDomain(mapper.finishMetroStation),
+        orderStatus = OrderStatus(mapper.orderStatus.code, mapper.orderStatus.name),
+        passenger = passengerMapper.dtoToDomain(mapper.passenger),
+        passengerCategory = passengerCategoryMapper.dtoToDomain(mapper.passengerCategory),
+        transfers = if (mapper.transfers != null) mapper.transfers.map {
+            metroStationTransferMapper.dtoToDomain(
+                it
+            )
+        } else null,
+        duration = mapper.duration
     )
 
-    fun dtoToDomain(updatedPassengerOrderDTO: UpdatedPassengerOrderDTO) = PassengerOrder(
+    fun dtoToDomain(mapper: UpdatedPassengerOrderDTO, createdAt: Instant) = PassengerOrder(
         id = null,
-        startDescription = updatedPassengerOrderDTO.startDescription,
-        finishDescription = updatedPassengerOrderDTO.finishDescription,
-        orderApplication = updatedPassengerOrderDTO.orderApplication,
-        passengerCount = updatedPassengerOrderDTO.passengerCount,
-        maleEmployeeCount = updatedPassengerOrderDTO.maleEmployeeCount,
-        femaleEmployeeCount = updatedPassengerOrderDTO.femaleEmployeeCount,
-        additionalInfo = updatedPassengerOrderDTO.additionalInfo,
-        orderTime = updatedPassengerOrderDTO.orderTime,
-        startTime = updatedPassengerOrderDTO.startTime,
-        finishTime = updatedPassengerOrderDTO.finishTime,
+        startDescription = mapper.startDescription,
+        finishDescription = mapper.finishDescription,
+        orderApplication = OrderApplication(mapper.orderApplication.code, mapper.orderApplication.name),
+        passengerCount = mapper.passengerCount,
+        maleEmployeeCount = mapper.maleEmployeeCount,
+        femaleEmployeeCount = mapper.femaleEmployeeCount,
+        additionalInfo = mapper.additionalInfo,
+        orderTime = mapper.orderTime,
+        startTime = mapper.startTime,
+        finishTime = mapper.finishTime,
         absenceTime = null,
         cancelTime = null,
-        createdAt = null,
+        createdAt = createdAt,
         updatedAt = Instant.now(),
-        deletedAt = null
+        deletedAt = null,
+        baggage = if (mapper.baggage != null) OrderBaggage(
+            mapper.baggage.type,
+            mapper.baggage.weight,
+            mapper.baggage.isHelpNeeded
+        ) else null,
+        startMetroStation = metroStationMapper.dtoToDomain(mapper.startMetroStation),
+        finishMetroStation = metroStationMapper.dtoToDomain(mapper.finishMetroStation),
+        orderStatus = OrderStatus(mapper.orderStatus.code, mapper.orderStatus.name),
+        passenger = passengerMapper.dtoToDomain(mapper.passenger),
+        passengerCategory = passengerCategoryMapper.dtoToDomain(mapper.passengerCategory),
+        transfers = if (mapper.transfers != null) mapper.transfers.map {
+            metroStationTransferMapper.dtoToDomain(
+                it
+            )
+        } else null,
+        duration = mapper.duration
     )
 
-    fun domainToEntity(passengerOrder: PassengerOrder) = PassengerOrderEntity(
-        id = null,
-        startDescription = passengerOrder.startDescription,
-        finishDescription = passengerOrder.finishDescription,
-        orderApplication = passengerOrder.orderApplication,
-        passengerCount = passengerOrder.passengerCount,
-        maleEmployeeCount = passengerOrder.maleEmployeeCount,
-        femaleEmployeeCount = passengerOrder.femaleEmployeeCount,
-        additionalInfo = passengerOrder.additionalInfo,
-        orderTime = passengerOrder.orderTime,
-        startTime = passengerOrder.startTime,
-        finishTime = passengerOrder.finishTime,
-        absenceTime = passengerOrder.absenceTime,
-        cancelTime = passengerOrder.cancelTime,
-        createdAt = passengerOrder.createdAt,
-        updatedAt = passengerOrder.updatedAt,
-        deletedAt = passengerOrder.deletedAt,
-        startStation = null,
-        finishStation = null,
-        baggage = null,
-        orderStatusCode = null,
-        passenger = null,
-        passengerCategory = null,
-        transfers = null
+    fun domainToEntity(mapper: PassengerOrder) = PassengerOrderEntity(
+        id = mapper.id,
+        startDescription = mapper.startDescription,
+        finishDescription = mapper.finishDescription,
+        passengerCount = mapper.passengerCount,
+        maleEmployeeCount = mapper.maleEmployeeCount,
+        femaleEmployeeCount = mapper.femaleEmployeeCount,
+        additionalInfo = mapper.additionalInfo,
+        orderTime = mapper.orderTime,
+        startTime = mapper.startTime,
+        finishTime = mapper.finishTime,
+        absenceTime = mapper.absenceTime,
+        cancelTime = mapper.cancelTime,
+        createdAt = mapper.createdAt,
+        updatedAt = mapper.updatedAt,
+        deletedAt = mapper.deletedAt,
+        startStation = metroStationMapper.domainToEntity(mapper.startMetroStation),
+        finishStation = metroStationMapper.domainToEntity(mapper.finishMetroStation),
+        baggage = gson.toJson(mapper.baggage).toPGObject(),
+        orderStatusCode = OrderStatusEntity(mapper.orderApplication.code, mapper.orderStatus.name),
+        passenger = passengerMapper.domainToEntity(mapper.passenger, mapper.passenger.category.name),
+        passengerCategory = passengerCategoryMapper.domainToEntity(mapper.passengerCategory),
+        transfers = gson.toJson(mapper.transfers).toPGObject(),
+        duration = PGInterval(0, 0, 0, 0, 0, mapper.duration)
     )
 }

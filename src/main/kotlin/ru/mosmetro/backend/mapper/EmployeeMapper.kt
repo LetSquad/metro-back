@@ -1,13 +1,15 @@
 package ru.mosmetro.backend.mapper
 
+import java.time.LocalTime
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Employee
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.UpdateEmployeeDTO
 import ru.mosmetro.backend.model.entity.EmployeeEntity
+import ru.mosmetro.backend.model.entity.MetroUserEntity
 import ru.mosmetro.backend.model.enums.SexType
-import java.time.LocalTime
 
 @Component
 class EmployeeMapper(
@@ -26,7 +28,8 @@ class EmployeeMapper(
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
-        rank = employeeRankMapper.entityToDomain(mapper.rank)
+        rank = employeeRankMapper.entityToDomain(mapper.rank),
+        login = mapper.user.login
     )
 
     fun domainToDto(mapper: Employee) = EmployeeDTO(
@@ -41,10 +44,11 @@ class EmployeeMapper(
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRankMapper.domainToDto(mapper.rank),
-        employeeRole = employeeRankMapper.domainToDto(mapper.rank).role
+        employeeRole = employeeRankMapper.domainToDto(mapper.rank).role,
+        login = mapper.workPhone
     )
 
-    fun dtoToDomain(mapper: NewEmployeeDTO) = Employee(
+    fun dtoToDomain(mapper: NewEmployeeDTO, employeeRankDTO: EmployeeRankDTO) = Employee(
         id = null,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
@@ -52,15 +56,16 @@ class EmployeeMapper(
         sex = mapper.sex,
         workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(4, 6).toInt()),
         workFinish = LocalTime.of(mapper.shift.substring(9, 11).toInt(), mapper.shift.takeLast(2).toInt()),
-        shiftType = "", // TODO add map dictionary
+        shiftType = "",
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
-        rank = TODO(),
+        rank = employeeRankMapper.dtoToDomain(employeeRankDTO),
+        login = mapper.workPhone
     )
 
-    fun dtoToDomain(mapper: UpdateEmployeeDTO, id: Long) = Employee(
+    fun dtoToDomain(mapper: UpdateEmployeeDTO, id: Long, employeeRankDTO: EmployeeRankDTO) = Employee(
         id = id,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
@@ -73,10 +78,11 @@ class EmployeeMapper(
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
-        rank = TODO(),
+        rank = employeeRankMapper.dtoToDomain(employeeRankDTO),
+        login = mapper.workPhone
     )
 
-    fun domainToEntity(mapper: Employee) = EmployeeEntity(
+    fun domainToEntity(mapper: Employee, userEntity: MetroUserEntity) = EmployeeEntity(
         id = mapper.id,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
@@ -89,6 +95,7 @@ class EmployeeMapper(
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
-        rank = TODO(),
+        rank = employeeRankMapper.domainToEntity(mapper.rank),
+        user = userEntity
     )
 }
