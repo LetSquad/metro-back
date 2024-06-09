@@ -29,6 +29,13 @@ class MetroTransfersService(
     private val allTransfers: List<MetroStationTransfer> = stationTransferEntityRepository.findAll()
         .map { stationTransferMapper.entityToDomain(it) }
 
+    fun calculateTransferDuration(
+            startStation: MetroStation,
+            finishStation: MetroStation
+    ): Long {
+        return calculateTransfers(OrderTransfersRequestDTO(startStation.id!!, finishStation.id!!)).duration
+    }
+
     fun calculateTransfers(request: OrderTransfersRequestDTO): OrderTransfersResponseDTO {
         val graph = DefaultUndirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java)
 
