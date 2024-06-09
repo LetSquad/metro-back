@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
@@ -25,11 +26,12 @@ import ru.mosmetro.backend.service.EmployeeService
 class EmployeeController(
     private val employeeService: EmployeeService
 ) {
+
     @Operation(
         summary = "Получение всех сотрудников"
     )
     @GetMapping
-    fun getEmployees(): ListWithTotal<EmployeeDTO> {
+    suspend fun getEmployees(): ListWithTotal<EmployeeDTO> {
         return employeeService.getEmployees()
     }
 
@@ -37,7 +39,9 @@ class EmployeeController(
         summary = "Получение сотрудника по его идентификатору"
     )
     @GetMapping("{id}")
-    fun getEmployeeById(@Parameter(description = "ID работника") @PathVariable id: Long): EmployeeDTO {
+    suspend fun getEmployeeById(
+        @Parameter(description = "ID работника") @PathVariable id: Long
+    ): EntityForEdit<EmployeeDTO> {
         return employeeService.getEmployeeById(id)
     }
 
@@ -45,7 +49,7 @@ class EmployeeController(
         summary = "Создание нового работника"
     )
     @PostMapping
-    fun createEmployee(@RequestBody newEmployeeDTO: NewEmployeeDTO): EmployeeDTO {
+    suspend fun createEmployee(@RequestBody newEmployeeDTO: NewEmployeeDTO): EmployeeDTO {
         return employeeService.createEmployee(newEmployeeDTO)
     }
 
@@ -61,7 +65,7 @@ class EmployeeController(
         summary = "Обновление работника по его идентификатору"
     )
     @PutMapping("{id}")
-    fun updateEmployee(
+    suspend fun updateEmployee(
         @Parameter(description = "ID работника") @PathVariable id: Long,
         @RequestBody updateEmployeeDTO: UpdateEmployeeDTO
     ): EmployeeDTO {
@@ -72,7 +76,7 @@ class EmployeeController(
         summary = "Удаление работника по его идентификатору"
     )
     @DeleteMapping("{id}")
-    fun deleteEmployee(@Parameter(description = "ID заявки") @PathVariable id: Long) {
+    suspend fun deleteEmployee(@Parameter(description = "ID заявки") @PathVariable id: Long) {
         employeeService.deleteEmployee(id)
     }
 
@@ -80,7 +84,7 @@ class EmployeeController(
         summary = "Получение должностей работников"
     )
     @GetMapping("ranks")
-    fun getEmployeeRanks(): ListWithTotal<EmployeeRankDTO> {
+    suspend fun getEmployeeRanks(): ListWithTotal<EmployeeRankDTO> {
         return employeeService.getAllEmployeeRanks()
     }
 
@@ -88,7 +92,7 @@ class EmployeeController(
         summary = "Получение времени работы работников"
     )
     @GetMapping("shifts")
-    fun getEmployeeShifts(): ListWithTotal<EmployeeShiftDTO> {
+    suspend fun getEmployeeShifts(): ListWithTotal<EmployeeShiftDTO> {
         return employeeService.getAllEmployeeShifts()
     }
 }

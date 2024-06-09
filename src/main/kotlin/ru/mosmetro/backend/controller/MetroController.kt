@@ -15,11 +15,12 @@ import ru.mosmetro.backend.service.MetroService
 class MetroController(
     private val metroService: MetroService
 ) {
+
     @Operation(
         summary = "Получение всех станций метро"
     )
     @GetMapping
-    fun getAllMetroStations(): ListWithTotal<MetroStationDTO> {
+    suspend fun getAllMetroStations(): ListWithTotal<MetroStationDTO> {
         return metroService.getAllMetroStations()
     }
 }
