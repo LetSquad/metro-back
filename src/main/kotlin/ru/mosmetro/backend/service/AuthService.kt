@@ -5,11 +5,12 @@ import ru.mosmetro.backend.model.dto.AuthDTO
 
 @Service
 class AuthService {
+
     fun auth(): AuthDTO {
-        TODO()
+        return AuthDTO("ADMIN")
     }
 
     fun refresh(): AuthDTO {
-        TODO()
+        return AuthDTO("ADMIN")
     }
 }

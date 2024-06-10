@@ -10,11 +10,12 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
-import java.time.Duration
-import java.time.Instant
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import org.postgresql.util.PGobject
+import ru.mosmetro.backend.model.domain.MetroStationTransfer
+import ru.mosmetro.backend.model.domain.OrderBaggage
+import java.time.Duration
+import java.time.Instant
 
 @Entity
 @Table(name = "passenger_order")
@@ -33,7 +34,7 @@ data class PassengerOrderEntity(
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "transfers")
-    val transfers: PGobject,
+    val transfers: List<MetroStationTransfer>,
 
     @Column(name = "passenger_count")
     val passengerCount: Int,
@@ -46,7 +47,7 @@ data class PassengerOrderEntity(
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "baggage")
-    val baggage: PGobject?,
+    val baggage: OrderBaggage?,
 
     @Column(name = "additional_info", length = Integer.MAX_VALUE)
     val additionalInfo: String?,

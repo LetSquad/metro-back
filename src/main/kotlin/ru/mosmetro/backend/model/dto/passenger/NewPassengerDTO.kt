@@ -1,7 +1,6 @@
 package ru.mosmetro.backend.model.dto.passenger
 
 import io.swagger.v3.oas.annotations.media.Schema
-import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 
 data class NewPassengerDTO(
@@ -18,5 +17,5 @@ data class NewPassengerDTO(
     @Schema(description = "Флаг наличия сопровождающего")
     val hasPacemaker: Boolean?,
     @Schema(description = "Категория пассажира")
-    val category: PassengerCategoryType
+    val category: PassengerCategoryDTO
 )

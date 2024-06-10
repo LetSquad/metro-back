@@ -5,4 +5,5 @@ import ru.mosmetro.backend.model.enums.PassengerCategoryType
 data class PassengerCategory(
     val code: PassengerCategoryType,
     val name: String,
+    val shortName: String
 )

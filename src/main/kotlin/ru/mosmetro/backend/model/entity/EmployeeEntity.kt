@@ -44,10 +44,10 @@ data class EmployeeEntity(
     val shiftType: String,
 
     @Column(name = "work_phone", length = Integer.MAX_VALUE)
-    val workPhone: String,
+    val workPhone: String?,
 
     @Column(name = "personal_phone", length = Integer.MAX_VALUE)
-    val personalPhone: String,
+    val personalPhone: String?,
 
     @Column(name = "employee_number")
     val employeeNumber: Long,

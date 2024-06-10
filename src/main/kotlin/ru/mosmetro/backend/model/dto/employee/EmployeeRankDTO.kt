@@ -9,7 +9,7 @@ data class EmployeeRankDTO(
     @Schema(description = "Наименование")
     val name: String,
     @Schema(description = "Сокращенное название")
-    val shortName: String,
+    val shortName: String?,
     @Schema(description = "Роль к должности")
     val role: EmployeeRoleType,
 )

@@ -1,6 +1,7 @@
 package ru.mosmetro.backend.service
 
 import kotlinx.coroutines.coroutineScope
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.EntityNotFoundException
 import ru.mosmetro.backend.mapper.EmployeeMapper
@@ -43,6 +44,21 @@ class EmployeeService(
             .map { employeeMapper.entityToDomain(it) }
             .map { employeeMapper.domainToDto(it) }
         return@coroutineScope ListWithTotal(employeeDTOList.size, employeeDTOList)
+    }
+
+    /**
+     *
+     * Метод получает текущего рабочего
+     *
+     * @return EmployeeDTO в которых предоставлена информация о текущем рабочем
+     *
+     * */
+    suspend fun getCurrentEmployee(): EmployeeDTO = coroutineScope {
+        val id: Long = 142
+        return@coroutineScope jpaContext { employeeEntityRepository.findByIdOrNull(id) }
+            ?.let { employeeMapper.entityToDomain(it) }
+            ?.let { employeeMapper.domainToDto(it) }
+            ?: throw EntityNotFoundException(id.toString())
     }
 
     /**

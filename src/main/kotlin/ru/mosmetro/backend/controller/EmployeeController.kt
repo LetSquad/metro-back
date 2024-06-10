@@ -46,6 +46,14 @@ class EmployeeController(
     }
 
     @Operation(
+        summary = "Получение профиля текущего сотрудника"
+    )
+    @GetMapping("profile")
+    suspend fun getCurrentEmployee(): EmployeeDTO {
+        return employeeService.getCurrentEmployee()
+    }
+
+    @Operation(
         summary = "Создание нового работника"
     )
     @PostMapping

@@ -105,6 +105,6 @@ class OrderService(
     }
 
     suspend fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> = coroutineScope {
-        TODO()
+        return@coroutineScope ListWithTotal(0, emptyList()) //TODO: реализовать получение заявок пользователя
     }
 }

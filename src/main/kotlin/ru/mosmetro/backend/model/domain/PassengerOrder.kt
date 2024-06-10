@@ -24,7 +24,7 @@ data class PassengerOrder(
     val orderStatus: OrderStatus,
     val passenger: Passenger,
     val baggage: OrderBaggage?,
-    val transfers: List<MetroStationTransfer>?,
+    val transfers: List<MetroStationTransfer>,
     val passengerCategory: PassengerCategory,
     val startMetroStation: MetroStation,
     val finishMetroStation: MetroStation,

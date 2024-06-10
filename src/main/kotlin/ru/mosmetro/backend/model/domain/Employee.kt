@@ -1,7 +1,7 @@
 package ru.mosmetro.backend.model.domain
 
-import java.time.LocalTime
 import ru.mosmetro.backend.model.enums.SexType
+import java.time.LocalTime
 
 data class Employee(
     val id: Long?,
@@ -12,8 +12,8 @@ data class Employee(
     val workStart: LocalTime,
     val workFinish: LocalTime,
     val shiftType: String,
-    val workPhone: String,
-    val personalPhone: String,
+    val workPhone: String?,
+    val personalPhone: String?,
     val employeeNumber: Long,
     val lightDuties: Boolean,
     val rank: EmployeeRank,
