@@ -1,11 +1,6 @@
 package ru.mosmetro.backend.mapper
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.time.Duration
-import java.time.Instant
 import org.springframework.stereotype.Component
-import ru.mosmetro.backend.model.domain.MetroStationTransfer
 import ru.mosmetro.backend.model.domain.OrderApplication
 import ru.mosmetro.backend.model.domain.OrderBaggage
 import ru.mosmetro.backend.model.domain.OrderStatus
@@ -19,15 +14,15 @@ import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
 import ru.mosmetro.backend.model.entity.OrderStatusEntity
 import ru.mosmetro.backend.model.entity.PassengerOrderEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
-import ru.mosmetro.backend.util.toPGObject
+import java.time.Duration
+import java.time.Instant
 
 @Component
 class OrderMapper(
     private val metroStationMapper: MetroStationMapper,
     private val metroStationTransferMapper: MetroStationTransferMapper,
     private val passengerMapper: PassengerMapper,
-    private val passengerCategoryMapper: PassengerCategoryMapper,
-    private val gson: Gson
+    private val passengerCategoryMapper: PassengerCategoryMapper
 ) {
     fun entityToDomain(mapper: PassengerOrderEntity) = PassengerOrder(
         id = mapper.id,
@@ -46,19 +41,13 @@ class OrderMapper(
         finishTime = mapper.finishTime,
         absenceTime = mapper.absenceTime,
         cancelTime = mapper.cancelTime,
-        baggage = gson.fromJson(
-            mapper.baggage?.value,
-            object : TypeToken<Collection<OrderBaggage?>?>() {}.type
-        ),
+        baggage = mapper.baggage,
         startMetroStation = metroStationMapper.entityToDomain(mapper.startStation),
         finishMetroStation = metroStationMapper.entityToDomain(mapper.finishStation),
         orderStatus = OrderStatus(OrderStatusType.valueOf(mapper.orderStatusCode.code), mapper.orderStatusCode.name),
         passenger = passengerMapper.entityToDomain(mapper.passenger),
         passengerCategory = passengerCategoryMapper.entityToDomain(mapper.passengerCategory),
-        transfers = gson.fromJson(
-            mapper.baggage?.value ?: "[]",
-            object : TypeToken<Collection<MetroStationTransfer?>?>() {}.type
-        ),
+        transfers = mapper.transfers,
         createdAt = mapper.createdAt,
         updatedAt = mapper.updatedAt,
         deletedAt = mapper.deletedAt,
@@ -92,11 +81,7 @@ class OrderMapper(
         orderStatus = OrderStatusDTO(mapper.orderStatus.code, mapper.orderStatus.name),
         passenger = passengerMapper.domainToDto(mapper.passenger),
         passengerCategory = passengerCategoryMapper.domainToDto(mapper.passengerCategory),
-        transfers = if (mapper.transfers != null) mapper.transfers.map {
-            metroStationTransferMapper.domainToDto(
-                it
-            )
-        } else null
+        transfers = mapper.transfers.map { metroStationTransferMapper.domainToDto(it) }
     )
 
     fun dtoToDomain(mapper: NewPassengerOrderDTO) = PassengerOrder(
@@ -126,11 +111,7 @@ class OrderMapper(
         orderStatus = OrderStatus(mapper.orderStatus.code, mapper.orderStatus.name),
         passenger = passengerMapper.dtoToDomain(mapper.passenger),
         passengerCategory = passengerCategoryMapper.dtoToDomain(mapper.passengerCategory),
-        transfers = if (mapper.transfers != null) mapper.transfers.map {
-            metroStationTransferMapper.dtoToDomain(
-                it
-            )
-        } else null,
+        transfers = mapper.transfers.map { metroStationTransferMapper.dtoToDomain(it) },
         duration = Duration.ofSeconds(mapper.duration)
     )
 
@@ -161,11 +142,7 @@ class OrderMapper(
         orderStatus = OrderStatus(mapper.orderStatus.code, mapper.orderStatus.name),
         passenger = passengerMapper.dtoToDomain(mapper.passenger),
         passengerCategory = passengerCategoryMapper.dtoToDomain(mapper.passengerCategory),
-        transfers = if (mapper.transfers != null) mapper.transfers.map {
-            metroStationTransferMapper.dtoToDomain(
-                it
-            )
-        } else null,
+        transfers = mapper.transfers.map { metroStationTransferMapper.dtoToDomain(it) },
         duration = Duration.ofSeconds(mapper.duration)
     )
 
@@ -187,11 +164,11 @@ class OrderMapper(
         deletedAt = mapper.deletedAt,
         startStation = metroStationMapper.domainToEntity(mapper.startMetroStation),
         finishStation = metroStationMapper.domainToEntity(mapper.finishMetroStation),
-        baggage = gson.toJson(mapper.baggage).toPGObject(),
+        baggage = mapper.baggage,
         orderStatusCode = OrderStatusEntity(mapper.orderApplication.code, mapper.orderStatus.name),
-        passenger = passengerMapper.domainToEntity(mapper.passenger, mapper.passenger.category.name),
+        passenger = passengerMapper.domainToEntity(mapper.passenger),
         passengerCategory = passengerCategoryMapper.domainToEntity(mapper.passengerCategory),
-        transfers = gson.toJson(mapper.transfers).toPGObject(),
+        transfers = mapper.transfers,
         duration = mapper.duration
     )
 }

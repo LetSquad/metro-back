@@ -8,23 +8,28 @@ import ru.mosmetro.backend.model.enums.PassengerCategoryType
 
 @Component
 class PassengerCategoryMapper {
+
     fun entityToDomain(mapper: PassengerCategoryEntity) = PassengerCategory(
         code = PassengerCategoryType.valueOf(mapper.code),
-            name = mapper.name,
+        name = mapper.name,
+        shortName = mapper.shortName
     )
 
     fun domainToDto(mapper: PassengerCategory) = PassengerCategoryDTO(
         code = mapper.code.name,
         name = mapper.name,
+        shortName = mapper.shortName
     )
 
     fun dtoToDomain(mapper: PassengerCategoryDTO) = PassengerCategory(
         code = PassengerCategoryType.valueOf(mapper.code),
         name = mapper.name,
+        shortName = mapper.shortName
     )
 
     fun domainToEntity(mapper: PassengerCategory) = PassengerCategoryEntity(
         code = mapper.code.name,
         name = mapper.name,
+        shortName = mapper.shortName
     )
 }

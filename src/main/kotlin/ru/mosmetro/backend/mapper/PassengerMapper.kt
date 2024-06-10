@@ -1,18 +1,17 @@
 package ru.mosmetro.backend.mapper
 
-import java.time.Instant
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Passenger
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
-import ru.mosmetro.backend.model.entity.PassengerCategoryEntity
 import ru.mosmetro.backend.model.entity.PassengerEntity
-import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
+import java.time.Instant
 
 @Component
-class PassengerMapper {
+class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapper) {
+
     fun entityToDomain(mapper: PassengerEntity) = Passenger(
         id = mapper.id,
         firstName = mapper.firstName,
@@ -23,7 +22,7 @@ class PassengerMapper {
         hasPacemaker = mapper.hasPacemaker,
         createdAt = mapper.createdAt,
         deletedAt = mapper.deletedAt,
-        category = PassengerCategoryType.valueOf(mapper.category.code)
+        category = passengerCategoryMapper.entityToDomain(mapper.category)
     )
 
     fun dtoToDomain(mapper: NewPassengerDTO) = Passenger(
@@ -36,7 +35,7 @@ class PassengerMapper {
         hasPacemaker = mapper.hasPacemaker,
         createdAt = Instant.now(),
         deletedAt = null,
-        category = mapper.category
+        category = passengerCategoryMapper.dtoToDomain(mapper.category)
     )
 
     fun dtoToDomain(mapper: PassengerDTO) = Passenger(
@@ -49,7 +48,7 @@ class PassengerMapper {
         hasPacemaker = mapper.hasPacemaker,
         createdAt = Instant.now(),
         deletedAt = null,
-        category = mapper.category
+        category = passengerCategoryMapper.dtoToDomain(mapper.category)
     )
 
     fun dtoToDomain(mapper: UpdatePassengerDTO, id: Long, createdAt: Instant) = Passenger(
@@ -62,10 +61,10 @@ class PassengerMapper {
         hasPacemaker = mapper.hasPacemaker,
         createdAt = createdAt,
         deletedAt = mapper.deletedAt,
-        category = mapper.category
+        category = passengerCategoryMapper.dtoToDomain(mapper.category)
     )
 
-    fun domainToEntity(mapper: Passenger, categoryName: String) = PassengerEntity(
+    fun domainToEntity(mapper: Passenger) = PassengerEntity(
         id = mapper.id,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
@@ -75,7 +74,7 @@ class PassengerMapper {
         hasPacemaker = mapper.hasPacemaker,
         createdAt = mapper.createdAt,
         deletedAt = mapper.deletedAt,
-        category = PassengerCategoryEntity(mapper.category.name, categoryName)
+        category = passengerCategoryMapper.domainToEntity(mapper.category)
     )
 
     fun domainToDto(mapper: Passenger) = PassengerDTO(
@@ -86,6 +85,6 @@ class PassengerMapper {
         sex = mapper.sex,
         comment = mapper.comment,
         hasPacemaker = mapper.hasPacemaker,
-        category = mapper.category
+        category = passengerCategoryMapper.domainToDto(mapper.category)
     )
 }

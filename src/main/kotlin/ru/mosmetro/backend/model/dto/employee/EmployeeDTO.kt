@@ -11,9 +11,9 @@ data class EmployeeDTO(
         @Schema(description = "роль")
         val employeeRole: EmployeeRoleType,
         @Schema(description = "Рабочий телефон")
-        val workPhone: String,
+        val workPhone: String?,
         @Schema(description = "Личный телефон")
-        val personalPhone: String,
+        val personalPhone: String?,
         @Schema(description = "Имя рабочего")
         val firstName: String,
         @Schema(description = "Фамилия рабочего")

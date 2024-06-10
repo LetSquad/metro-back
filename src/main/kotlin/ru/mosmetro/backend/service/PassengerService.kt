@@ -82,7 +82,7 @@ class PassengerService(
     suspend fun createPassenger(newPassengerDTO: NewPassengerDTO): PassengerDTO = coroutineScope {
         return@coroutineScope newPassengerDTO
             .let { passengerMapper.dtoToDomain(it) }
-            .let { passengerMapper.domainToEntity(it, newPassengerDTO.category.name) }
+            .let { passengerMapper.domainToEntity(it) }
             .let { jpaContext { passengerEntityRepository.save(it) } }
             .also { subscriptionService.notifyPassengerUpdate() }
             .let { passengerMapper.entityToDomain(it) }
@@ -103,7 +103,7 @@ class PassengerService(
 
         return@coroutineScope updatePassengerDTO
             .let { passengerMapper.dtoToDomain(it, id, passengerEntity.createdAt) }
-            .let { passengerMapper.domainToEntity(it, passengerEntity.category.name) }
+            .let { passengerMapper.domainToEntity(it) }
             .let { passengerEntityRepository.save(it) }
             .also { subscriptionService.notifyPassengerUpdate() }
             .let { passengerMapper.entityToDomain(it) }

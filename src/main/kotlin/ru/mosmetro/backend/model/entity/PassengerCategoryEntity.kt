@@ -9,11 +9,15 @@ import jakarta.persistence.Table
 @Entity
 @Table(name = "passenger_category")
 data class PassengerCategoryEntity(
+
     @Id
     @SequenceGenerator(name = "passenger_category_id_gen", sequenceName = "employee_id_seq", allocationSize = 1)
     @Column(name = "code", nullable = false, length = Integer.MAX_VALUE)
     val code: String,
 
     @Column(name = "name", length = Integer.MAX_VALUE)
-    val name: String
+    val name: String,
+
+    @Column(name = "short_name", length = Integer.MAX_VALUE)
+    val shortName: String
 )

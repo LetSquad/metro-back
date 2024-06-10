@@ -1,6 +1,10 @@
 package ru.mosmetro.backend.model.entity
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.SequenceGenerator
+import jakarta.persistence.Table
 
 @Entity
 @Table(name = "employee_rank")
@@ -14,7 +18,7 @@ data class EmployeeRankEntity(
     val name: String,
 
     @Column(name = "short_name", length = Integer.MAX_VALUE)
-    val shortName: String,
+    val shortName: String?,
 
     @Column(name = "role", length = Integer.MAX_VALUE)
     val role: String

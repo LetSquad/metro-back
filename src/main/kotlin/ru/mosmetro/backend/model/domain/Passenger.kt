@@ -1,8 +1,7 @@
 package ru.mosmetro.backend.model.domain
 
-import java.time.Instant
-import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
+import java.time.Instant
 
 data class Passenger(
     val id: Long?,
@@ -14,5 +13,5 @@ data class Passenger(
     val hasPacemaker: Boolean?,
     val createdAt: Instant,
     val deletedAt: Instant?,
-    val category: PassengerCategoryType
+    val category: PassengerCategory
 )
