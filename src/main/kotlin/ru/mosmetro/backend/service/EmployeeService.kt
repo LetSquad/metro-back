@@ -1,8 +1,10 @@
 package ru.mosmetro.backend.service
 
 import kotlinx.coroutines.coroutineScope
-import org.springframework.data.repository.findByIdOrNull
+import kotlinx.coroutines.reactor.awaitSingle
+import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import ru.mosmetro.backend.exception.EntityNotFoundException
 import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeRankMapper
@@ -18,6 +20,7 @@ import ru.mosmetro.backend.repository.EmployeeEntityRepository
 import ru.mosmetro.backend.repository.EmployeeRankEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
 import ru.mosmetro.backend.repository.MetroUserEntityRepository
+import ru.mosmetro.backend.service.jwt.RefreshTokenService
 import ru.mosmetro.backend.util.jpaContext
 
 @Service
@@ -26,6 +29,7 @@ class EmployeeService(
     private val employeeRankMapper: EmployeeRankMapper,
     private val employeeShiftMapper: EmployeeShiftMapper,
     private val lockService: EntityLockService,
+    private val refreshTokenService: RefreshTokenService,
     private val employeeEntityRepository: EmployeeEntityRepository,
     private val employeeRankEntityRepository: EmployeeRankEntityRepository,
     private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
@@ -54,11 +58,14 @@ class EmployeeService(
      *
      * */
     suspend fun getCurrentEmployee(): EmployeeDTO = coroutineScope {
-        val id: Long = 142
-        return@coroutineScope jpaContext { employeeEntityRepository.findByIdOrNull(id) }
-            ?.let { employeeMapper.entityToDomain(it) }
-            ?.let { employeeMapper.domainToDto(it) }
-            ?: throw EntityNotFoundException(id.toString())
+        val login: String = ReactiveSecurityContextHolder.getContext()
+            .awaitSingle()
+            .authentication
+            .principal as String
+
+        return@coroutineScope jpaContext { employeeEntityRepository.findByUserLogin(login) }
+            .let { employeeMapper.entityToDomain(it) }
+            .let { employeeMapper.domainToDto(it) }
     }
 
     /**
@@ -117,13 +124,18 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
+    @Transactional
     suspend fun createEmployee(newEmployeeDTO: NewEmployeeDTO): EmployeeDTO = coroutineScope {
         val employeeRank = jpaContext { employeeRankEntityRepository.findById(newEmployeeDTO.rankCode) }
             .orElseThrow { EntityNotFoundException(newEmployeeDTO.rankCode) }
             .let { employeeRankMapper.entityToDomain(it) }
             .let { employeeRankMapper.domainToDto(it) }
-        val userEntity = jpaContext { metroUserEntityRepository.findByLogin(newEmployeeDTO.workPhone) }
+
+        val userEntity = jpaContext { metroUserEntityRepository.findByLogin(newEmployeeDTO.workPhone) } //TODO: нужно создавать нового юзера
             .orElseThrow { EntityNotFoundException(newEmployeeDTO.workPhone) }
+
+        refreshTokenService.initUser(newEmployeeDTO.workPhone)
+
         return@coroutineScope newEmployeeDTO
             .let { employeeMapper.dtoToDomain(it, employeeRank) }
             .let { employeeMapper.domainToEntity(it, userEntity) }

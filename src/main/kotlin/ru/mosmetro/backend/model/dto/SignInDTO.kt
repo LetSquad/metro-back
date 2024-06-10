@@ -1,6 +1,6 @@
 package ru.mosmetro.backend.model.dto
 
 data class SignInDTO(
-    val phone: String?,
-    val password: String?,
+    val phone: String,
+    val password: String,
 )
