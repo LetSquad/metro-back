@@ -1,32 +1,47 @@
 package ru.mosmetro.backend.model.entity
 
 import jakarta.persistence.Column
-import jakarta.persistence.EmbeddedId
+import jakarta.persistence.Id
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.MapsId
+import jakarta.persistence.GenerationType
+import jakarta.persistence.GeneratedValue
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.time.Instant
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "employee_shift_order")
 data class EmployeeShiftOrderEntity(
-    @EmbeddedId
-    @SequenceGenerator(name = "employee_shift_order_id_gen", sequenceName = "employee_id_seq", allocationSize = 1)
-    val id: EmployeeShiftOrderEntityId?,
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "employee_shift_order_id_gen")
+    @SequenceGenerator(name = "employee_shift_order_id_gen", sequenceName = "employee_shift_order_id_seq", allocationSize = 1)
+    @Column(name = "id", nullable = false)
+    val id: Long?,
 
-    @MapsId("employeeShiftId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "employee_shift_id", nullable = false)
-    val employeeShift: EmployeeShiftEntity?,
+    val employeeShift: EmployeeShiftEntity,
 
-    @MapsId("orderId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "order_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     val order: PassengerOrderEntity?,
 
     @Column(name = "is_attached")
-    val isAttached: Boolean?
-) 
+    val isAttached: Boolean,
+
+    @Column(name = "action_type")
+    val actionType: String,
+
+    @Column(name = "time_start")
+    val timeStart: LocalDateTime,
+
+    @Column(name = "time_finish")
+    val timeFinish: LocalDateTime,
+
+    @Column(name = "created_at")
+    val createdAt: Instant,
+)

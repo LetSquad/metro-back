@@ -6,12 +6,15 @@ import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
 import ru.mosmetro.backend.model.entity.EmployeeShiftEntity
 
 @Component
-class EmployeeShiftMapper {
+class EmployeeShiftMapper(
+    private val employeeMapper: EmployeeMapper,
+) {
     fun entityToDomain(mapper: EmployeeShiftEntity) = EmployeeShift(
             id = mapper.id,
             shiftDate = mapper.shiftDate,
             workStart = mapper.workStart,
             workFinish = mapper.workFinish,
+            employee = employeeMapper.entityToDomain(mapper.employee),
     )
 
     fun domainToDto(mapper: EmployeeShift) = EmployeeShiftDTO(

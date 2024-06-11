@@ -5,4 +5,5 @@ import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
 import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntityId
 
 interface EmployeeShiftOrderEntityRepository : JpaRepository<EmployeeShiftOrderEntity, EmployeeShiftOrderEntityId> {
+    fun findAllByEmployeeShiftId(employeeShiftId: Long): List<EmployeeShiftOrderEntity>
 }

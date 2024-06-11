@@ -23,15 +23,15 @@ data class EmployeeShiftEntity(
     val id: Long?,
 
     @Column(name = "shift_date")
-    val shiftDate: Instant?,
+    val shiftDate: Instant,
 
     @Column(name = "work_start")
-    val workStart: LocalTime?,
+    val workStart: LocalTime,
 
     @Column(name = "work_finish")
-    val workFinish: LocalTime?,
+    val workFinish: LocalTime,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
-    val employee: EmployeeEntity?
+    val employee: EmployeeEntity
 ) 
