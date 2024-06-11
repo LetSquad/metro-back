@@ -17,16 +17,20 @@ import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
-import ru.mosmetro.backend.service.OrderDistributionService
 import ru.mosmetro.backend.service.MetroTransfersService
+import ru.mosmetro.backend.service.OrderDistributionService
 import ru.mosmetro.backend.service.OrderService
+import ru.mosmetro.backend.service.TimeListService
+import java.time.LocalDate
 
 @Tag(name = "Методы работы с заявками")
 @RestController
 @RequestMapping("/api/orders")
 class OrderController(
     private val orderService: OrderService,
+    private val timeListService: TimeListService,
     private val transfersService: MetroTransfersService,
     private val distributionService: OrderDistributionService,
 ) {
@@ -37,6 +41,15 @@ class OrderController(
     @GetMapping
     suspend fun getOrders(): ListWithTotal<PassengerOrderDTO> {
         return orderService.getOrders()
+    }
+
+    @Operation(
+        summary = "Получение временного графика всех заявок на завтра"
+    )
+    @GetMapping("time-list")
+    suspend fun getOrdersTimeList(): OrderTimeListDTO {
+        val tomorrowDate = LocalDate.now().plusDays(1)
+        return timeListService.getOrderTimeList(tomorrowDate)
     }
 
     @Operation(

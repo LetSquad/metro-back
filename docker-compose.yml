@@ -1,0 +1,13 @@
+version: '3.1'
+
+services:
+  metro_back:
+    image: postgres
+    container_name: postgres_db
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=metro_back
+    ports:
+      - 5432:5432
