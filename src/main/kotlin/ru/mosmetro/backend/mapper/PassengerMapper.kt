@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.mapper
 
+import java.time.Instant
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Passenger
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
@@ -7,7 +8,6 @@ import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
 import ru.mosmetro.backend.model.entity.PassengerEntity
 import ru.mosmetro.backend.model.enums.SexType
-import java.time.Instant
 
 @Component
 class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapper) {
@@ -39,7 +39,7 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
     )
 
     fun dtoToDomain(mapper: PassengerDTO) = Passenger(
-        id = null,
+        id = mapper.id,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
         middleName = mapper.middleName,

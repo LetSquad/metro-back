@@ -152,6 +152,12 @@ create table metro_user
 
 CREATE SEQUENCE metro_user_id_seq START 1;
 
+CREATE TABLE user_refresh_token
+(
+    user_login    TEXT PRIMARY KEY REFERENCES metro_user (login),
+    refresh_token TEXT
+);
+
 create table employee
 (
     id              bigint primary key,

@@ -84,7 +84,7 @@ class EmployeeController(
         summary = "Удаление работника по его идентификатору"
     )
     @DeleteMapping("{id}")
-    suspend fun deleteEmployee(@Parameter(description = "ID заявки") @PathVariable id: Long) {
+    suspend fun deleteEmployee(@Parameter(description = "ID рабочего") @PathVariable id: Long) {
         employeeService.deleteEmployee(id)
     }
 

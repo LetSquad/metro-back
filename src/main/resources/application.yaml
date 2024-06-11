@@ -8,6 +8,12 @@ spring:
 springdoc:
   swagger-ui:
     path: '/swagger-ui/'
+metro:
+  security:
+    key-secret: 'moscowmetroisthebestmetrointheworldlctleadershackathon2024moscowmetroisthebestmetrointheworldlctleadershackathon2024'
+    auth-token-validity: 1h
+    refresh-token-validity: 7d
+    none-same-site-cookies: false
 logging:
   level:
     ru.mosmetro.backend: debug

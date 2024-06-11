@@ -20,7 +20,7 @@
         <kotlin.version>2.0.0</kotlin.version>
 
         <spring-boot.version>3.3.0</spring-boot.version>
-        <springdoc.openapi.version>1.8.0</springdoc.openapi.version>
+        <springdoc.openapi.version>2.5.0</springdoc.openapi.version>
 
         <jsonwebtoken.version>0.12.5</jsonwebtoken.version>
         <jgrapht.version>1.5.1</jgrapht.version>
@@ -73,8 +73,8 @@
         <!-- openapi -->
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.5.0</version>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+            <version>${springdoc.openapi.version}</version>
         </dependency>
 
         <!-- graph -->

@@ -1,11 +1,11 @@
 package ru.mosmetro.backend.model.dto.order
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.Instant
 import ru.mosmetro.backend.model.dto.metro.MetroStationDTO
 import ru.mosmetro.backend.model.dto.metro.MetroStationTransferDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
-import java.time.Instant
 
 data class UpdatedPassengerOrderDTO(
     @Schema(description = "Описание старта пути заявки")
@@ -45,7 +45,7 @@ data class UpdatedPassengerOrderDTO(
     @Schema(description = "Категория пассажира")
     val passengerCategory: PassengerCategoryDTO,
     @Schema(description = "Начальная станция маршрута")
-    val startMetroStation: MetroStationDTO,
+    val startStation: MetroStationDTO,
     @Schema(description = "Конечная станция маршрута")
-    val finishMetroStation: MetroStationDTO
+    val finishStation: MetroStationDTO
 )
