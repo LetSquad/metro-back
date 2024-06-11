@@ -3,6 +3,7 @@ package ru.mosmetro.backend.service
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ru.mosmetro.backend.exception.EntityNotFoundException
@@ -16,6 +17,7 @@ import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
 import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.UpdateEmployeeDTO
+import ru.mosmetro.backend.model.entity.MetroUserEntity
 import ru.mosmetro.backend.repository.EmployeeEntityRepository
 import ru.mosmetro.backend.repository.EmployeeRankEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
@@ -33,9 +35,9 @@ class EmployeeService(
     private val employeeEntityRepository: EmployeeEntityRepository,
     private val employeeRankEntityRepository: EmployeeRankEntityRepository,
     private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
-    private val metroUserEntityRepository: MetroUserEntityRepository
+    private val metroUserEntityRepository: MetroUserEntityRepository,
+    private val passwordEncoder: PasswordEncoder
 ) {
-
     /**
      *
      * Метод получает всех рабочих
@@ -131,8 +133,14 @@ class EmployeeService(
             .let { employeeRankMapper.entityToDomain(it) }
             .let { employeeRankMapper.domainToDto(it) }
 
-        val userEntity = jpaContext { metroUserEntityRepository.findByLogin(newEmployeeDTO.workPhone) } //TODO: нужно создавать нового юзера
-            .orElseThrow { EntityNotFoundException(newEmployeeDTO.workPhone) }
+        val userEntity = metroUserEntityRepository.save(
+            MetroUserEntity(
+                null,
+                newEmployeeDTO.workPhone,
+                passwordEncoder.encode("temp"),
+                true
+            )
+        )
 
         refreshTokenService.initUser(newEmployeeDTO.workPhone)
 

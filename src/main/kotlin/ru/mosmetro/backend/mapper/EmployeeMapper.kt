@@ -1,6 +1,7 @@
 package ru.mosmetro.backend.mapper
 
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Employee
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
@@ -38,7 +39,9 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        shift = mapper.workStart.hour.toString() + ":" + mapper.workStart.hour.toString() + " - " + mapper.workFinish.hour.toString() + ":" + mapper.workFinish.hour.toString(),
+        shift = mapper.workStart.truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.truncatedTo(
+            ChronoUnit.MINUTES
+        ).toString(),
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
@@ -54,9 +57,9 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(4, 6).toInt()),
-        workFinish = LocalTime.of(mapper.shift.substring(9, 11).toInt(), mapper.shift.takeLast(2).toInt()),
-        shiftType = "",
+        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()),
+        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()),
+        shiftType = mapper.shift,
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
@@ -71,15 +74,15 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        workStart = mapper.workStart,
-        workFinish = mapper.workFinish,
-        shiftType = mapper.shiftType,
+        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()),
+        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()),
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRankMapper.dtoToDomain(employeeRankDTO),
-        login = mapper.workPhone
+        login = mapper.workPhone,
+        shiftType = mapper.shift //TODO это поле нужно??
     )
 
     fun domainToEntity(mapper: Employee, userEntity: MetroUserEntity) = EmployeeEntity(

@@ -1,5 +1,7 @@
 package ru.mosmetro.backend.mapper
 
+import java.time.Duration
+import java.time.Instant
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.OrderApplication
 import ru.mosmetro.backend.model.domain.OrderBaggage
@@ -11,11 +13,11 @@ import ru.mosmetro.backend.model.dto.order.OrderBaggageDTO
 import ru.mosmetro.backend.model.dto.order.OrderStatusDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
+import ru.mosmetro.backend.model.entity.MetroStationEntity
 import ru.mosmetro.backend.model.entity.OrderStatusEntity
+import ru.mosmetro.backend.model.entity.PassengerEntity
 import ru.mosmetro.backend.model.entity.PassengerOrderEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
-import java.time.Duration
-import java.time.Instant
 
 @Component
 class OrderMapper(
@@ -115,8 +117,8 @@ class OrderMapper(
         duration = Duration.ofSeconds(mapper.duration)
     )
 
-    fun dtoToDomain(mapper: UpdatedPassengerOrderDTO, createdAt: Instant) = PassengerOrder(
-        id = null,
+    fun dtoToDomain(mapper: UpdatedPassengerOrderDTO, createdAt: Instant, id: Long) = PassengerOrder(
+        id = id,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
         orderApplication = OrderApplication(mapper.orderApplication.code, mapper.orderApplication.name),
@@ -137,8 +139,8 @@ class OrderMapper(
             mapper.baggage.weight,
             mapper.baggage.isHelpNeeded
         ) else null,
-        startMetroStation = metroStationMapper.dtoToDomain(mapper.startMetroStation),
-        finishMetroStation = metroStationMapper.dtoToDomain(mapper.finishMetroStation),
+        startMetroStation = metroStationMapper.dtoToDomain(mapper.startStation),
+        finishMetroStation = metroStationMapper.dtoToDomain(mapper.finishStation),
         orderStatus = OrderStatus(mapper.orderStatus.code, mapper.orderStatus.name),
         passenger = passengerMapper.dtoToDomain(mapper.passenger),
         passengerCategory = passengerCategoryMapper.dtoToDomain(mapper.passengerCategory),
@@ -146,7 +148,10 @@ class OrderMapper(
         duration = Duration.ofSeconds(mapper.duration)
     )
 
-    fun domainToEntity(mapper: PassengerOrder) = PassengerOrderEntity(
+    fun domainToEntity(
+        mapper: PassengerOrder, orderStatusEntity: OrderStatusEntity, passengerEntity: PassengerEntity,
+        startStation: MetroStationEntity, finishStation: MetroStationEntity
+    ) = PassengerOrderEntity(
         id = mapper.id,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
@@ -162,11 +167,11 @@ class OrderMapper(
         createdAt = mapper.createdAt,
         updatedAt = mapper.updatedAt,
         deletedAt = mapper.deletedAt,
-        startStation = metroStationMapper.domainToEntity(mapper.startMetroStation),
-        finishStation = metroStationMapper.domainToEntity(mapper.finishMetroStation),
+        startStation = startStation,
+        finishStation = finishStation,
         baggage = mapper.baggage,
-        orderStatusCode = OrderStatusEntity(mapper.orderApplication.code, mapper.orderStatus.name),
-        passenger = passengerMapper.domainToEntity(mapper.passenger),
+        orderStatusCode = orderStatusEntity,
+        passenger = passengerEntity,
         passengerCategory = passengerCategoryMapper.domainToEntity(mapper.passengerCategory),
         transfers = mapper.transfers,
         duration = mapper.duration

@@ -19,7 +19,7 @@ data class NewEmployeeDTO(
     val middleName: String?,
     @Schema(description = "Пол сотрудника")
     val sex: SexType,
-    @Schema(description = "Тип смены")
+    @Schema(description = "Тип смены", pattern = "hh:mm-hh:mm")
     val shift: String,
     @Schema(description = "Номер сотрудника")
     val employeeNumber: Long,
