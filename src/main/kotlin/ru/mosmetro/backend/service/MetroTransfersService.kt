@@ -30,6 +30,20 @@ class MetroTransfersService(
         .map { stationTransferMapper.entityToDomain(it) }
 
     fun calculateTransfers(request: OrderTransfersRequestDTO): OrderTransfersResponseDTO {
+        return calculateTransfers(request.startStationId, request.finishStationId)
+    }
+
+    fun calculateMetroStationTransfersDuration(
+        start: MetroStation,
+        finish: MetroStation,
+    ): Long {
+        return calculateTransfers(start.id!!, finish.id!!).duration
+    }
+
+    fun calculateTransfers(
+        startStationId: Long,
+        finishStationId: Long
+    ): OrderTransfersResponseDTO {
         val graph = DefaultUndirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java)
 
         for (station in allStations.values) {
@@ -42,7 +56,7 @@ class MetroTransfersService(
         }
 
         val pathfinder = DijkstraShortestPath(graph)
-        val fullPath = pathfinder.getPath(request.startStationId, request.finishStationId)
+        val fullPath = pathfinder.getPath(startStationId, finishStationId)
         val pathEdges: List<DefaultWeightedEdge> = fullPath.edgeList
 
         lateinit var startStation: MetroStation

@@ -8,8 +8,8 @@ import ru.mosmetro.backend.model.enums.TimeListActionType
 
 @Component
 class EmployeeShiftOrderMapper(
-    val orderMapper: OrderMapper,
-    val passangerOrderMapper: OrderMapper,
+    private val orderMapper: OrderMapper,
+    private val passangerOrderMapper: OrderMapper,
 ) {
     fun entityToDomain(mapper: EmployeeShiftOrderEntity) = EmployeeShiftOrder(
             timeStart = mapper.timeStart,
