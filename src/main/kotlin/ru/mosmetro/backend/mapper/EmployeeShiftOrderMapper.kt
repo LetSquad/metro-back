@@ -5,15 +5,17 @@ import ru.mosmetro.backend.model.domain.EmployeeShiftOrder
 import ru.mosmetro.backend.model.dto.order.EmployeeShiftOrderDTO
 import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
 import ru.mosmetro.backend.model.enums.TimeListActionType
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Component
 class EmployeeShiftOrderMapper(
-    val orderMapper: OrderMapper,
-    val passangerOrderMapper: OrderMapper,
+    private val orderMapper: OrderMapper,
+    private val passangerOrderMapper: OrderMapper,
 ) {
     fun entityToDomain(mapper: EmployeeShiftOrderEntity) = EmployeeShiftOrder(
-            timeStart = mapper.timeStart,
-            timeFinish = mapper.timeFinish,
+            timeStart = LocalDateTime.ofInstant(mapper.timeStart, TIME_ZONE_UTC),
+            timeFinish = LocalDateTime.ofInstant(mapper.timeFinish, TIME_ZONE_UTC),
             actionType = TimeListActionType.valueOf(mapper.actionType),
             order = mapper.order?.let { passangerOrderMapper.entityToDomain(it) }
     )
@@ -24,4 +26,8 @@ class EmployeeShiftOrderMapper(
             actionType = mapper.actionType,
             order = mapper.order?.let { orderMapper.domainToDto(it) }
     )
+
+    companion object {
+        private val TIME_ZONE_UTC = ZoneId.of("UTC")
+    }
 }

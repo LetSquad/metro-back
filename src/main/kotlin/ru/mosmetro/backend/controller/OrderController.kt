@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
-import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
 import ru.mosmetro.backend.service.MetroTransfersService
 import ru.mosmetro.backend.service.OrderDistributionService
@@ -49,7 +49,7 @@ class OrderController(
     @GetMapping("time-list")
     suspend fun getOrdersTimeList(): OrderTimeListDTO {
         val tomorrowDate = LocalDate.now().plusDays(1)
-        return timeListService.getOrderTimeList(tomorrowDate)
+        return timeListService.getOrderTimeListWithAllTime(tomorrowDate)
     }
 
     @Operation(
@@ -109,7 +109,8 @@ class OrderController(
         summary = "Распределение заявок"
     )
     @PostMapping("/distribution")
-    fun calculateOrderDistribution(): PassengerOrderDTO {
-        return distributionService.calculateOrderDistribution()
+    fun calculateOrderDistribution(): OrderTimeListDTO {
+        val tomorrowDate = LocalDate.now().plusDays(1)
+        return distributionService.calculateOrderDistribution(tomorrowDate)
     }
 }

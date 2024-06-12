@@ -1,17 +1,16 @@
 package ru.mosmetro.backend.model.entity
 
 import jakarta.persistence.Column
-import jakarta.persistence.Id
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.GenerationType
-import jakarta.persistence.GeneratedValue
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import java.time.Instant
-import java.time.LocalDateTime
 
 @Entity
 @Table(name = "employee_shift_order")
@@ -37,10 +36,10 @@ data class EmployeeShiftOrderEntity(
     val actionType: String,
 
     @Column(name = "time_start")
-    val timeStart: LocalDateTime,
+    val timeStart: Instant,
 
     @Column(name = "time_finish")
-    val timeFinish: LocalDateTime,
+    val timeFinish: Instant,
 
     @Column(name = "created_at")
     val createdAt: Instant,

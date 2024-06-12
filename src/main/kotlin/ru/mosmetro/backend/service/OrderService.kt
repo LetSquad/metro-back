@@ -7,6 +7,7 @@ import ru.mosmetro.backend.exception.NoSuchOrderException
 import ru.mosmetro.backend.mapper.MetroStationMapper
 import ru.mosmetro.backend.mapper.OrderMapper
 import ru.mosmetro.backend.mapper.PassengerMapper
+import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
@@ -15,6 +16,8 @@ import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
 import ru.mosmetro.backend.repository.OrderStatusEntityRepository
 import ru.mosmetro.backend.repository.PassengerOrderEntityRepository
 import ru.mosmetro.backend.util.jpaContext
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 class OrderService(
@@ -39,6 +42,16 @@ class OrderService(
             .map { orderMapper.entityToDomain(it) }
             .map { orderMapper.domainToDto(it) }
         return@coroutineScope ListWithTotal(passengerOrderDTOS.size, passengerOrderDTOS)
+    }
+
+    fun getOrdersBetweenStartDate(
+        dateStart: LocalDateTime,
+        dateFinish: LocalDateTime,
+    ): List<PassengerOrder> {
+        return  passengerOrderEntityRepository.findAllByStartTimeBetween(
+            dateStart.toInstant(ZoneOffset.UTC),
+            dateFinish.toInstant(ZoneOffset.UTC))
+            .map { orderMapper.entityToDomain(it) }
     }
 
     /**
