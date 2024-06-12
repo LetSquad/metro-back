@@ -24,12 +24,13 @@ import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftOrderEntityRepository
 import ru.mosmetro.backend.service.ServiceTestUtil.METRO_WORK_TIME_FINISH
 import ru.mosmetro.backend.service.ServiceTestUtil.METRO_WORK_TIME_START
+import ru.mosmetro.backend.service.ServiceTestUtil.TIME_ZONE_UTC
 import ru.mosmetro.backend.service.ServiceTestUtil.makeOrderTime
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 import kotlin.test.assertTrue
 
 @SpringBootTest
@@ -230,7 +231,7 @@ class TimeListServiceTest {
     fun test_getOrderTimeListWithAllTime() {
         // mock
         val date = LocalDate.of(2024, 1, 1)
-        val instantDate = date.atStartOfDay(ZoneId.of("UTC")).toInstant()
+        val instantDate = date.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
         val employee1 = ServiceTestUtil.makeEmployee(
             id = 1,
@@ -336,7 +337,7 @@ class TimeListServiceTest {
     fun test_getOrderTimeList() {
         // mock
         val date = LocalDate.of(2024, 1, 1)
-        val instantDate = date.atStartOfDay(ZoneId.of("UTC")).toInstant()
+        val instantDate = date.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
         val employee1 = ServiceTestUtil.makeEmployee(
             id = 1,
@@ -420,7 +421,7 @@ class TimeListServiceTest {
         workFinish: LocalTime,
         employee: Employee
     ): EmployeeShiftEntity {
-        val instantShiftDate = shiftDate.atStartOfDay(ZoneId.of("UTC")).toInstant()
+        val instantShiftDate = shiftDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
         return EmployeeShiftEntity(
             id = id,
             shiftDate = instantShiftDate,
@@ -445,8 +446,8 @@ class TimeListServiceTest {
             order = null,
             isAttached = isAttached,
             actionType = actionType.name,
-            timeStart = LocalDateTime.of(date, timeStart),
-            timeFinish = LocalDateTime.of(date, timeFinish),
+            timeStart = LocalDateTime.of(date, timeStart).toInstant(ZoneOffset.UTC),
+            timeFinish = LocalDateTime.of(date, timeFinish).toInstant(ZoneOffset.UTC),
             createdAt = Instant.now(),
         )
     }

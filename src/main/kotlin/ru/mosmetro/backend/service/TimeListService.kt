@@ -44,7 +44,7 @@ class TimeListService(
     fun getOrderTimeListWithAllTime(
         timePlanDate: LocalDate
     ): OrderTimeListDTO {
-        val instantDate = timePlanDate.atStartOfDay(ZoneId.of("UTC")).toInstant()
+        val instantDate = timePlanDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
         val result: List<OrderTimeDTO> =
             employeeShiftEntityRepository.findAllByShiftDate(instantDate)
@@ -73,7 +73,7 @@ class TimeListService(
     fun getOrderTimeList(
         timePlanDate: LocalDate
     ): List<OrderTime> {
-        val instantDate = timePlanDate.atStartOfDay(ZoneId.of("UTC")).toInstant()
+        val instantDate = timePlanDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
         return employeeShiftEntityRepository.findAllByShiftDate(instantDate)
             .map { employeeShiftMapper.entityToDomain(it) }
@@ -177,5 +177,6 @@ class TimeListService(
     companion object {
         private val METRO_TIME_START = LocalTime.of(5, 30)
         private val METRO_TIME_FINISH = LocalTime.of(23, 59)
+        private val TIME_ZONE_UTC = ZoneId.of("UTC")
     }
 }

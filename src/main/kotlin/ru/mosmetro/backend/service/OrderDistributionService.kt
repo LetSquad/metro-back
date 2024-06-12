@@ -52,7 +52,7 @@ class OrderDistributionService(
         val passengerOrderList =
             orderService.getOrdersBetweenStartDate(orderStartTime, orderFinishTime)
                 .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
-                .sortedBy { it.startTime }
+                .sortedBy { it.orderTime }
 
         val orderNotInPlanList: MutableList<PassengerOrder> = mutableListOf()
 
@@ -61,8 +61,8 @@ class OrderDistributionService(
             val notBusyEmployeeList: List<OrderTime> = getTimeFreeEmployeeList(
                 passengerOrder,
                 employeeTimePlanList,
-                LocalDateTime.ofInstant(passengerOrder.startTime, ZoneId.of("UTC")),
-                LocalDateTime.ofInstant(passengerOrder.finishTime, ZoneId.of("UTC"))
+                LocalDateTime.ofInstant(passengerOrder.orderTime, TIME_ZONE_UTC),
+                LocalDateTime.ofInstant(passengerOrder.finishTime, TIME_ZONE_UTC)
             )
 
             if (notBusyEmployeeList.isEmpty()
@@ -157,9 +157,9 @@ class OrderDistributionService(
                 if (!transferTime.isZero) {
                     it!!.timePlan.add(
                         EmployeeShiftOrder(
-                            timeStart = LocalDateTime.ofInstant(order.startTime, ZoneId.of("UTC"))
+                            timeStart = LocalDateTime.ofInstant(order.orderTime, TIME_ZONE_UTC)
                                 .minusSeconds(transferTime.toSeconds()),
-                            timeFinish = LocalDateTime.ofInstant(order.startTime, ZoneId.of("UTC")),
+                            timeFinish = LocalDateTime.ofInstant(order.orderTime, TIME_ZONE_UTC),
                             actionType = TimeListActionType.TRANSFER,
                             order = null
                         )
@@ -168,8 +168,8 @@ class OrderDistributionService(
 
                 it!!.timePlan.add(
                     EmployeeShiftOrder(
-                        timeStart = LocalDateTime.ofInstant(order.startTime, ZoneId.of("UTC")),
-                        timeFinish = LocalDateTime.ofInstant(order.finishTime, ZoneId.of("UTC")),
+                        timeStart = LocalDateTime.ofInstant(order.orderTime, TIME_ZONE_UTC),
+                        timeFinish = LocalDateTime.ofInstant(order.finishTime, TIME_ZONE_UTC),
                         actionType = TimeListActionType.ORDER,
                         order = order
                     )
@@ -206,7 +206,7 @@ class OrderDistributionService(
                     flag = flag && !it.lightDuties
                 }
 
-                flag
+                return@filter flag
             }.count()
 
         return employeeNeedsCount <= actualCount
@@ -232,30 +232,30 @@ class OrderDistributionService(
     private fun getTimeFreeEmployeeList(
         order: PassengerOrder,
         timeLineEmployee: List<OrderTime>,
-        startTime: LocalDateTime,
+        orderTime: LocalDateTime,
         finishTime: LocalDateTime
     ): List<OrderTime> {
         return timeLineEmployee
             .filter {
-                it.employee.workStart <= startTime.toLocalTime() && it.employee.workFinish >= finishTime.toLocalTime() // смена сотрудника позволяет взять заявку
+                it.employee.workStart <= orderTime.toLocalTime() && it.employee.workFinish >= finishTime.toLocalTime() // смена сотрудника позволяет взять заявку
                         &&
                         it.timePlan
-                            .all { plan -> plan.timeFinish < startTime || plan.timeStart > finishTime }  // сотрудник свободен по графику дня
+                            .all { plan -> plan.timeFinish < orderTime || plan.timeStart > finishTime }  // сотрудник свободен по графику дня
             }
             .filter {   // сотрудник успеет приехать на станцию
                 // если пока не занят
                 if (it.timePlan.isEmpty()) {
-                    true
+                    return@filter true
 
                 // если занят
                 } else {
                     val planBefore = it.timePlan
-                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) < order.startTime }
+                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) < order.orderTime }
                         .filter { it.order != null }
                         .sortedBy { it.timeStart }
                     // по закрепленному плану свободен
                     if (planBefore.isEmpty()) {
-                        true
+                        return@filter true
                     } else {
                         val timeTransferSeconds = metroTransfersService.calculateMetroStationTransfersDuration(
                             planBefore.last().order!!.finishMetroStation,
@@ -263,7 +263,7 @@ class OrderDistributionService(
                         )
 
                         planBefore.last().timeFinish.plusSeconds(timeTransferSeconds)
-                            .toInstant(ZoneOffset.UTC) <= order.startTime
+                            .toInstant(ZoneOffset.UTC) <= order.orderTime
                     }
                 }
             }
@@ -324,10 +324,14 @@ class OrderDistributionService(
         }
 
         val planBefore = orderTime.timePlan
-            .filter { it.timeFinish.toInstant(ZoneOffset.UTC) < order.startTime }
+            .filter { it.timeFinish.toInstant(ZoneOffset.UTC) < order.orderTime }
             .filter { it.order != null }
             .sortedBy { it.timeStart }
 
         return if (planBefore.isEmpty()) null else planBefore.last().order!!.finishMetroStation
+    }
+
+    companion object {
+        private val TIME_ZONE_UTC = ZoneId.of("UTC")
     }
 }

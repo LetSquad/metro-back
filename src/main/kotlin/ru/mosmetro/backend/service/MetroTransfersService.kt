@@ -8,6 +8,7 @@ import ru.mosmetro.backend.mapper.MetroStationMapper
 import ru.mosmetro.backend.mapper.MetroStationTransferMapper
 import ru.mosmetro.backend.model.domain.MetroStation
 import ru.mosmetro.backend.model.domain.MetroStationTransfer
+import ru.mosmetro.backend.model.domain.OrderTransfers
 import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.repository.MetroStationEntityRepository
@@ -30,7 +31,11 @@ class MetroTransfersService(
         .map { stationTransferMapper.entityToDomain(it) }
 
     fun calculateTransfers(request: OrderTransfersRequestDTO): OrderTransfersResponseDTO {
-        return calculateTransfers(request.startStationId, request.finishStationId)
+        val result = calculateTransfers(request.startStationId, request.finishStationId)
+        return OrderTransfersResponseDTO(
+            duration = result.duration,
+            transfers = result.transfers.map { stationTransferMapper.domainToDto(it) }
+        )
     }
 
     fun calculateMetroStationTransfersDuration(
@@ -40,10 +45,10 @@ class MetroTransfersService(
         return calculateTransfers(start.id!!, finish.id!!).duration
     }
 
-    fun calculateTransfers(
+    private fun calculateTransfers(
         startStationId: Long,
         finishStationId: Long
-    ): OrderTransfersResponseDTO {
+    ): OrderTransfers {
         val graph = DefaultUndirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java)
 
         for (station in allStations.values) {
@@ -114,9 +119,9 @@ class MetroTransfersService(
             }
         }
 
-        return OrderTransfersResponseDTO(
+        return OrderTransfers(
             duration = fullPath.weight.toLong(),
-            transfers = resultPath.map { stationTransferMapper.domainToDto(it) }
+            transfers = resultPath
         )
     }
 }

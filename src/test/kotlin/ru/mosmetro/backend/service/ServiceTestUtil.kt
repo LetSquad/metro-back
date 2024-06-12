@@ -22,12 +22,14 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 object ServiceTestUtil {
 
     val METRO_WORK_TIME_START = LocalTime.of(5, 30)
     val METRO_WORK_TIME_FINISH = LocalTime.of(23, 59)
+    val TIME_ZONE_UTC = ZoneId.of("UTC")
 
     fun makeOrderTime(
         employee: Employee,
@@ -73,7 +75,7 @@ object ServiceTestUtil {
         id: Long,
         maleEmployeeCount: Int,
         femaleEmployeeCount: Int,
-        startTime: LocalDateTime,
+        orderTime: LocalDateTime,
         finishTime: LocalDateTime,
         orderStatusType: OrderStatusType,
         baggage: OrderBaggage?,
@@ -91,8 +93,8 @@ object ServiceTestUtil {
             femaleEmployeeCount = femaleEmployeeCount,
             duration = Duration.ZERO,
             additionalInfo = null,
-            orderTime = Instant.now(),
-            startTime = startTime.toInstant(ZoneOffset.UTC),
+            orderTime = orderTime.toInstant(ZoneOffset.UTC),
+            startTime = Instant.now(),
             finishTime = finishTime.toInstant(ZoneOffset.UTC),
             absenceTime = null,
             cancelTime = null,
