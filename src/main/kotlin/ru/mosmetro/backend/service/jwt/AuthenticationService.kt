@@ -51,7 +51,7 @@ class AuthenticationService(
             .principal as UserDetails
     }
 
-    private fun createAuthenticationTokens(userDetails: UserDetails): JwtCookies {
+    private suspend fun createAuthenticationTokens(userDetails: UserDetails): JwtCookies {
         val refreshToken: String = jwtTokenService.generateRefreshToken(userDetails)
         refreshTokenService.updateRefreshToken(userDetails.username, refreshToken)
 

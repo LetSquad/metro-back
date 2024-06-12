@@ -1,7 +1,6 @@
 package ru.mosmetro.backend.service
 
 import jakarta.persistence.EntityNotFoundException
-import kotlinx.coroutines.coroutineScope
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.mapper.MetroStationMapper
 import ru.mosmetro.backend.model.dto.ListWithTotal
@@ -22,11 +21,11 @@ class MetroService(
      * @return список сущностей MetroStationDTO в которых предоставлена информация о станциях метро
      *
      * */
-    suspend fun getAllMetroStations(): ListWithTotal<MetroStationDTO> = coroutineScope {
+    suspend fun getAllMetroStations(): ListWithTotal<MetroStationDTO> {
         val metroStationDTOList = jpaContext { metroStationEntityRepository.findAll() }
             .map { metroStationMapper.entityToDomain(it) }
             .map { metroStationMapper.domainToDto(it) }
-        return@coroutineScope ListWithTotal(metroStationDTOList.size, metroStationDTOList)
+        return ListWithTotal(metroStationDTOList.size, metroStationDTOList)
     }
 
     /**
@@ -36,11 +35,11 @@ class MetroService(
      * @return MetroStationDTO в которых предоставлена информация о станциях метро
      *
      * */
-    suspend fun getMetroStationById(id: Long): MetroStationDTO = coroutineScope {
+    suspend fun getMetroStationById(id: Long): MetroStationDTO {
         val metroStation = jpaContext { metroStationEntityRepository.findById(id) }
             .orElseThrow { EntityNotFoundException(id.toString()) }
             .let { metroStationMapper.entityToDomain(it) }
             .let { metroStationMapper.domainToDto(it) }
-        return@coroutineScope metroStation
+        return metroStation
     }
 }

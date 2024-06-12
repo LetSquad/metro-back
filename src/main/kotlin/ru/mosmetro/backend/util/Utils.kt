@@ -8,6 +8,6 @@ import org.slf4j.LoggerFactory
 
 inline fun <reified T> getLogger(): Logger = LoggerFactory.getLogger(T::class.java)
 
-suspend inline fun <reified T> jpaContext(noinline block: suspend CoroutineScope.() -> T): T {
+suspend fun <T> jpaContext(block: suspend CoroutineScope.() -> T): T {
     return withContext(Dispatchers.IO, block)
 }
