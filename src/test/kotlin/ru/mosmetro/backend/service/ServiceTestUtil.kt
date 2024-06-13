@@ -123,6 +123,58 @@ object ServiceTestUtil {
         )
     }
 
+    fun makePassengerOrder(
+        id: Long,
+        maleEmployeeCount: Int,
+        femaleEmployeeCount: Int,
+        createdAt: LocalDateTime,
+        orderTime: LocalDateTime,
+        finishTime: LocalDateTime,
+        orderStatusType: OrderStatusType,
+        baggage: OrderBaggage?,
+        passengerCategory: PassengerCategory,
+        startMetroStation: MetroStation,
+        finishMetroStation: MetroStation,
+    ): PassengerOrder {
+        return PassengerOrder(
+            id = id,
+            startDescription = null,
+            finishDescription = null,
+            orderApplication = OrderApplication("", ""),
+            passengerCount = maleEmployeeCount + femaleEmployeeCount,
+            maleEmployeeCount = maleEmployeeCount,
+            femaleEmployeeCount = femaleEmployeeCount,
+            duration = Duration.ZERO,
+            additionalInfo = null,
+            orderTime = orderTime.toInstant(ZoneOffset.UTC),
+            startTime = Instant.now(),
+            finishTime = finishTime.toInstant(ZoneOffset.UTC),
+            absenceTime = null,
+            cancelTime = null,
+            createdAt = createdAt.toInstant(ZoneOffset.UTC),
+            updatedAt = null,
+            deletedAt = null,
+            orderStatus = OrderStatus(orderStatusType, ""),
+            passenger = Passenger(
+                id = null,
+                firstName = "",
+                lastName = "",
+                middleName = "",
+                sex = SexType.MALE,
+                comment = null,
+                hasPacemaker = null,
+                createdAt = Instant.now(),
+                deletedAt = null,
+                category = passengerCategory,
+            ),
+            baggage = baggage,
+            transfers = listOf(),
+            passengerCategory = passengerCategory,
+            startMetroStation = startMetroStation,
+            finishMetroStation = finishMetroStation,
+        )
+    }
+
     fun makeEmployeeShiftOrder(
         timeStart: LocalDateTime,
         timeFinish: LocalDateTime,
