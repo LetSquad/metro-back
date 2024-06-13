@@ -47,8 +47,8 @@ class OrderDistributionService(
 
         // получаем все активные заявки в дату составления плана
         // сортируем заявки по времени
-        val orderStartTime = LocalDateTime.of(planDate, LocalTime.of(5, 30))
-        val orderFinishTime = LocalDateTime.of(planDate, LocalTime.of(23, 59))
+        val orderStartTime = LocalDateTime.of(planDate, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(planDate.plusDays(1), METRO_TIME_FINISH)
         val passengerOrderList =
             orderService.getOrdersBetweenStartDate(orderStartTime, orderFinishTime)
                 .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
@@ -59,6 +59,7 @@ class OrderDistributionService(
         for (passengerOrder in passengerOrderList) {
             // получаем всех свободных сотрудников на время заявки
             val notBusyEmployeeList: List<OrderTime> = getTimeFreeEmployeeList(
+                planDate,
                 passengerOrder,
                 employeeTimePlanList,
                 LocalDateTime.ofInstant(passengerOrder.orderTime, TIME_ZONE_UTC),
@@ -230,6 +231,7 @@ class OrderDistributionService(
     }
 
     private fun getTimeFreeEmployeeList(
+        planDate: LocalDate,
         order: PassengerOrder,
         timeLineEmployee: List<OrderTime>,
         orderTime: LocalDateTime,
@@ -237,10 +239,17 @@ class OrderDistributionService(
     ): List<OrderTime> {
         return timeLineEmployee
             .filter {
-                it.employee.workStart <= orderTime.toLocalTime() && it.employee.workFinish >= finishTime.toLocalTime() // смена сотрудника позволяет взять заявку
-                        &&
-                        it.timePlan
-                            .all { plan -> plan.timeFinish < orderTime || plan.timeStart > finishTime }  // сотрудник свободен по графику дня
+                // смена сотрудника позволяет взять заявку
+                if (it.employee.workStart > it.employee.workFinish)
+                    LocalDateTime.of(planDate, it.employee.workStart) <= orderTime
+                            && LocalDateTime.of(planDate.plusDays(1), it.employee.workFinish) >= finishTime
+                else
+                    LocalDateTime.of(planDate, it.employee.workStart) <= orderTime
+                            && LocalDateTime.of(planDate, it.employee.workFinish) >= finishTime
+            }
+            .filter {
+                // сотрудник свободен по графику дня
+                it.timePlan.all { plan -> plan.timeFinish <= orderTime || plan.timeStart >= finishTime }
             }
             .filter {   // сотрудник успеет приехать на станцию
                 // если пока не занят
@@ -262,8 +271,7 @@ class OrderDistributionService(
                             order.startMetroStation
                         )
 
-                        planBefore.last().timeFinish.plusSeconds(timeTransferSeconds)
-                            .toInstant(ZoneOffset.UTC) <= order.orderTime
+                        planBefore.last().timeFinish.plusSeconds(timeTransferSeconds).toInstant(ZoneOffset.UTC) <= order.orderTime
                     }
                 }
             }
@@ -324,7 +332,7 @@ class OrderDistributionService(
         }
 
         val planBefore = orderTime.timePlan
-            .filter { it.timeFinish.toInstant(ZoneOffset.UTC) < order.orderTime }
+            .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.orderTime }
             .filter { it.order != null }
             .sortedBy { it.timeStart }
 
@@ -332,6 +340,8 @@ class OrderDistributionService(
     }
 
     companion object {
+        private val METRO_TIME_START = LocalTime.of(5, 30)
+        private val METRO_TIME_FINISH = LocalTime.of(1, 0)
         private val TIME_ZONE_UTC = ZoneId.of("UTC")
     }
 }
