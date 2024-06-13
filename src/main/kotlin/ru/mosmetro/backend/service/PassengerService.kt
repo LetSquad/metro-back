@@ -1,6 +1,5 @@
 package ru.mosmetro.backend.service
 
-import kotlinx.coroutines.coroutineScope
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.NoSuchPassengerException
 import ru.mosmetro.backend.mapper.PassengerCategoryMapper
@@ -30,11 +29,11 @@ class PassengerService(
      * Метод возвращает список всех пассажиров в системе
      *
      * */
-    suspend fun getPassengers(): ListWithTotal<PassengerDTO> = coroutineScope {
+    suspend fun getPassengers(): ListWithTotal<PassengerDTO> {
         val passengerDTOList = jpaContext { passengerEntityRepository.findAll() }
             .map { passengerMapper.entityToDomain(it) }
             .map { passengerMapper.domainToDto(it) }
-        return@coroutineScope ListWithTotal(passengerDTOList.size, passengerDTOList)
+        return ListWithTotal(passengerDTOList.size, passengerDTOList)
     }
 
     /**
@@ -42,11 +41,11 @@ class PassengerService(
      * Метод возвращает список всех категорий пассажиров в системе
      *
      * */
-    suspend fun getPassengerCategories(): ListWithTotal<PassengerCategoryDTO> = coroutineScope {
+    suspend fun getPassengerCategories(): ListWithTotal<PassengerCategoryDTO> {
         val passengerCategoryDTOList = jpaContext { passengerCategoryEntityRepository.findAll() }
             .map { passengerCategoryMapper.entityToDomain(it) }
             .map { passengerCategoryMapper.domainToDto(it) }
-        return@coroutineScope ListWithTotal(passengerCategoryDTOList.size, passengerCategoryDTOList)
+        return ListWithTotal(passengerCategoryDTOList.size, passengerCategoryDTOList)
     }
 
     /**
@@ -57,7 +56,7 @@ class PassengerService(
      * @return сущность PassengerDTO в которой предоставлена информация о пассажире
      *
      * */
-    suspend fun getPassengerById(id: Long): EntityForEdit<PassengerDTO> = coroutineScope {
+    suspend fun getPassengerById(id: Long): EntityForEdit<PassengerDTO> {
         val passenger: PassengerDTO = jpaContext { passengerEntityRepository.findById(id) }
             .orElseThrow {
                 NoSuchPassengerException(id)
@@ -65,7 +64,7 @@ class PassengerService(
             .let { passengerMapper.entityToDomain(it) }
             .let { passengerMapper.domainToDto(it) }
 
-        return@coroutineScope EntityForEdit(
+        return EntityForEdit(
             isLockedForEdit = lockService.checkPassengerLock(id),
             data = passenger
         )
@@ -79,8 +78,8 @@ class PassengerService(
      * @return сущность PassengerDTO в которой предоставлена информация о пассажире
      *
      * */
-    suspend fun createPassenger(newPassengerDTO: NewPassengerDTO): PassengerDTO = coroutineScope {
-        return@coroutineScope newPassengerDTO
+    suspend fun createPassenger(newPassengerDTO: NewPassengerDTO): PassengerDTO {
+        return newPassengerDTO
             .let { passengerMapper.dtoToDomain(it) }
             .let { passengerMapper.domainToEntity(it) }
             .let { jpaContext { passengerEntityRepository.save(it) } }
@@ -97,11 +96,11 @@ class PassengerService(
      * @return сущность PassengerDTO в которой предоставлена информация о пассажире
      *
      * */
-    suspend fun updatePassenger(id: Long, updatePassengerDTO: UpdatePassengerDTO): PassengerDTO = coroutineScope {
+    suspend fun updatePassenger(id: Long, updatePassengerDTO: UpdatePassengerDTO): PassengerDTO {
         val passengerEntity = jpaContext { passengerEntityRepository.findById(id) }
             .orElseThrow { NoSuchPassengerException(id) }
 
-        return@coroutineScope updatePassengerDTO
+        return updatePassengerDTO
             .let { passengerMapper.dtoToDomain(it, id, passengerEntity.createdAt) }
             .let { passengerMapper.domainToEntity(it) }
             .let { passengerEntityRepository.save(it) }
@@ -117,7 +116,7 @@ class PassengerService(
      * @param id - идентификатор пользователя
      *
      * */
-    suspend fun deletePassenger(id: Long) = coroutineScope {
+    suspend fun deletePassenger(id: Long) {
         jpaContext { passengerEntityRepository.deleteById(id) }
             .also { subscriptionService.notifyPassengerUpdate() }
     }

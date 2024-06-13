@@ -1,11 +1,10 @@
 package ru.mosmetro.backend.service
 
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import ru.mosmetro.backend.exception.EntityNotFoundException
 import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeRankMapper
@@ -23,6 +22,7 @@ import ru.mosmetro.backend.repository.EmployeeRankEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
 import ru.mosmetro.backend.repository.MetroUserEntityRepository
 import ru.mosmetro.backend.service.jwt.RefreshTokenService
+import ru.mosmetro.backend.util.executeSuspended
 import ru.mosmetro.backend.util.jpaContext
 
 @Service
@@ -36,7 +36,8 @@ class EmployeeService(
     private val employeeRankEntityRepository: EmployeeRankEntityRepository,
     private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
     private val metroUserEntityRepository: MetroUserEntityRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val transactionTemplate: TransactionTemplate
 ) {
     /**
      *
@@ -45,11 +46,11 @@ class EmployeeService(
      * @return список сущностей EmployeeDTO в которых предоставлена информация о рабочих
      *
      * */
-    suspend fun getEmployees(): ListWithTotal<EmployeeDTO> = coroutineScope {
+    suspend fun getEmployees(): ListWithTotal<EmployeeDTO> {
         val employeeDTOList = jpaContext { employeeEntityRepository.findAll() }
             .map { employeeMapper.entityToDomain(it) }
             .map { employeeMapper.domainToDto(it) }
-        return@coroutineScope ListWithTotal(employeeDTOList.size, employeeDTOList)
+        return ListWithTotal(employeeDTOList.size, employeeDTOList)
     }
 
     /**
@@ -59,13 +60,13 @@ class EmployeeService(
      * @return EmployeeDTO в которых предоставлена информация о текущем рабочем
      *
      * */
-    suspend fun getCurrentEmployee(): EmployeeDTO = coroutineScope {
+    suspend fun getCurrentEmployee(): EmployeeDTO {
         val login: String = ReactiveSecurityContextHolder.getContext()
             .awaitSingle()
             .authentication
             .principal as String
 
-        return@coroutineScope jpaContext { employeeEntityRepository.findByUserLogin(login) }
+        return jpaContext { employeeEntityRepository.findByUserLogin(login) }
             .let { employeeMapper.entityToDomain(it) }
             .let { employeeMapper.domainToDto(it) }
     }
@@ -77,11 +78,11 @@ class EmployeeService(
      * @return список сущностей EmployeeRankDTO в которых предоставлена информация о рабочих
      *
      * */
-    suspend fun getAllEmployeeRanks(): ListWithTotal<EmployeeRankDTO> = coroutineScope {
+    suspend fun getAllEmployeeRanks(): ListWithTotal<EmployeeRankDTO> {
         val employeeDTOList = jpaContext { employeeRankEntityRepository.findAll() }
             .map { employeeRankMapper.entityToDomain(it) }
             .map { employeeRankMapper.domainToDto(it) }
-        return@coroutineScope ListWithTotal(employeeDTOList.size, employeeDTOList)
+        return ListWithTotal(employeeDTOList.size, employeeDTOList)
     }
 
     /**
@@ -91,11 +92,11 @@ class EmployeeService(
      * @return список сущностей EmployeeShiftDTO в которых предоставлена информация о рабочих
      *
      * */
-    suspend fun getAllEmployeeShifts(): ListWithTotal<EmployeeShiftDTO> = coroutineScope {
+    suspend fun getAllEmployeeShifts(): ListWithTotal<EmployeeShiftDTO> {
         val employeeDTOList = jpaContext { employeeShiftEntityRepository.findAll() }
             .map { employeeShiftMapper.entityToDomain(it) }
             .map { employeeShiftMapper.domainToDto(it) }
-        return@coroutineScope ListWithTotal(employeeDTOList.size, employeeDTOList)
+        return ListWithTotal(employeeDTOList.size, employeeDTOList)
     }
 
     /**
@@ -106,13 +107,13 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
-    suspend fun getEmployeeById(id: Long): EntityForEdit<EmployeeDTO> = coroutineScope {
+    suspend fun getEmployeeById(id: Long): EntityForEdit<EmployeeDTO> {
         val employee: EmployeeDTO = jpaContext { employeeEntityRepository.findById(id) }
             .orElseThrow { EntityNotFoundException(id.toString()) }
             .let { employeeMapper.entityToDomain(it) }
             .let { employeeMapper.domainToDto(it) }
 
-        return@coroutineScope EntityForEdit(
+        return EntityForEdit(
             isLockedForEdit = lockService.checkEmployeeLock(id),
             data = employee
         )
@@ -126,9 +127,8 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
-    @Transactional
-    suspend fun createEmployee(newEmployeeDTO: NewEmployeeDTO): EmployeeDTO = coroutineScope {
-        val employeeRank = jpaContext { employeeRankEntityRepository.findById(newEmployeeDTO.rankCode) }
+    suspend fun createEmployee(newEmployeeDTO: NewEmployeeDTO): EmployeeDTO = transactionTemplate.executeSuspended {
+        val employeeRank = employeeRankEntityRepository.findById(newEmployeeDTO.rankCode)
             .orElseThrow { EntityNotFoundException(newEmployeeDTO.rankCode) }
             .let { employeeRankMapper.entityToDomain(it) }
             .let { employeeRankMapper.domainToDto(it) }
@@ -144,7 +144,7 @@ class EmployeeService(
 
         refreshTokenService.initUser(newEmployeeDTO.workPhone)
 
-        return@coroutineScope newEmployeeDTO
+        return@executeSuspended newEmployeeDTO
             .let { employeeMapper.dtoToDomain(it, employeeRank) }
             .let { employeeMapper.domainToEntity(it, userEntity) }
             .let { employeeEntityRepository.save(it) }
@@ -161,7 +161,7 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
-    suspend fun updateEmployee(id: Long, updateEmployeeDTO: UpdateEmployeeDTO): EmployeeDTO = coroutineScope {
+    suspend fun updateEmployee(id: Long, updateEmployeeDTO: UpdateEmployeeDTO): EmployeeDTO {
         val employeeEntity = jpaContext { employeeEntityRepository.findById(id) }
             .orElseThrow { EntityNotFoundException(id.toString()) }
 
@@ -169,7 +169,7 @@ class EmployeeService(
             .let { employeeRankMapper.entityToDomain(it) }
             .let { employeeRankMapper.domainToDto(it) }
 
-        return@coroutineScope updateEmployeeDTO
+        return updateEmployeeDTO
             .let { employeeMapper.dtoToDomain(updateEmployeeDTO, id, employeeRankDTO) }
             .let { employeeMapper.domainToEntity(it, employeeEntity.user) }
             .let { employeeEntityRepository.save(it) }
@@ -184,7 +184,7 @@ class EmployeeService(
      * @param id - идентификатор пользователя
      *
      * */
-    suspend fun deleteEmployee(id: Long) = coroutineScope {
+    suspend fun deleteEmployee(id: Long) {
         jpaContext { employeeEntityRepository.deleteById(id) }
     }
 

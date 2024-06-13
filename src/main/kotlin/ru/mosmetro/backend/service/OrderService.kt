@@ -1,7 +1,6 @@
 package ru.mosmetro.backend.service
 
 import jakarta.persistence.EntityNotFoundException
-import kotlinx.coroutines.coroutineScope
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.NoSuchOrderException
 import ru.mosmetro.backend.mapper.MetroStationMapper
@@ -37,11 +36,11 @@ class OrderService(
      * Метод возвращает список заявок в системе
      *
      * */
-    suspend fun getOrders(): ListWithTotal<PassengerOrderDTO> = coroutineScope {
+    suspend fun getOrders(): ListWithTotal<PassengerOrderDTO> {
         val passengerOrderDTOS = jpaContext { passengerOrderEntityRepository.findAll() }
             .map { orderMapper.entityToDomain(it) }
             .map { orderMapper.domainToDto(it) }
-        return@coroutineScope ListWithTotal(passengerOrderDTOS.size, passengerOrderDTOS)
+        return ListWithTotal(passengerOrderDTOS.size, passengerOrderDTOS)
     }
 
     fun getOrdersBetweenStartDate(
@@ -62,13 +61,13 @@ class OrderService(
      * @return сущность PassengerOrderDTO в которой предоставлена информация о заявке
      *
      * */
-    suspend fun getOrderById(id: Long): EntityForEdit<PassengerOrderDTO> = coroutineScope {
+    suspend fun getOrderById(id: Long): EntityForEdit<PassengerOrderDTO> {
         val order: PassengerOrderDTO = jpaContext { passengerOrderEntityRepository.findById(id) }
             .orElseThrow { NoSuchOrderException(id) }
             .let { orderMapper.entityToDomain(it) }
             .let { orderMapper.domainToDto(it) }
 
-        return@coroutineScope EntityForEdit(
+        return EntityForEdit(
             isLockedForEdit = lockService.checkOrderLock(id),
             data = order
         )
@@ -82,8 +81,8 @@ class OrderService(
      * @return сущность PassengerOrderDTO в которой предоставлена информация о заявке
      *
      * */
-    suspend fun createOrder(newPassengerOrderDTO: NewPassengerOrderDTO): PassengerOrderDTO = coroutineScope {
-        val orderStatusEntity = orderStatusEntityRepository.findByCode(newPassengerOrderDTO.orderStatus.code.name)
+    suspend fun createOrder(newPassengerOrderDTO: NewPassengerOrderDTO): PassengerOrderDTO {
+        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(newPassengerOrderDTO.orderStatus.code.name) }
             .orElseThrow { EntityNotFoundException(newPassengerOrderDTO.orderStatus.code.name) }
         val passengerEntity = passengerService.getPassengerById(newPassengerOrderDTO.passenger.id!!).data
             .let { passengerMapper.dtoToDomain(it) }
@@ -95,7 +94,7 @@ class OrderService(
             .let { metroStationMapper.dtoToDomain(it) }
             .let { metroStationMapper.domainToEntity(it) }
 
-        return@coroutineScope newPassengerOrderDTO
+        return newPassengerOrderDTO
             .let { orderMapper.dtoToDomain(it) }
             .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerEntity, startStation, finishStation) }
             .let { jpaContext { passengerOrderEntityRepository.save(it) } }
@@ -113,11 +112,11 @@ class OrderService(
      * @return сущность PassengerOrderDTO в которой предоставлена информация о заявке
      *
      * */
-    suspend fun updateOrder(id: Long, updatedPassengerOrderDTO: UpdatedPassengerOrderDTO): PassengerOrderDTO = coroutineScope {
+    suspend fun updateOrder(id: Long, updatedPassengerOrderDTO: UpdatedPassengerOrderDTO): PassengerOrderDTO {
         val passengerOrderEntity = jpaContext { passengerOrderEntityRepository.findById(id) }
             .orElseThrow { NoSuchOrderException(id) }
 
-        val orderStatusEntity = orderStatusEntityRepository.findByCode(updatedPassengerOrderDTO.orderStatus.code.name)
+        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(updatedPassengerOrderDTO.orderStatus.code.name) }
             .orElseThrow { EntityNotFoundException(updatedPassengerOrderDTO.orderStatus.code.name) }
 
         val passengerEntity = passengerService.getPassengerById(updatedPassengerOrderDTO.passenger.id!!).data
@@ -130,7 +129,7 @@ class OrderService(
             .let { metroStationMapper.dtoToDomain(it) }
             .let { metroStationMapper.domainToEntity(it) }
 
-        return@coroutineScope updatedPassengerOrderDTO
+        return updatedPassengerOrderDTO
             .let { orderMapper.dtoToDomain(it, passengerOrderEntity.createdAt, id) }
             .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerEntity, startStation, finishStation) }
             .let { passengerOrderEntityRepository.save(it) }
@@ -146,12 +145,12 @@ class OrderService(
      * @param id - идентификатор заявки
      *
      * */
-    suspend fun deleteOrder(id: Long) = coroutineScope {
+    suspend fun deleteOrder(id: Long) {
         jpaContext { passengerOrderEntityRepository.deleteById(id) }
             .also { subscriptionService.notifyOrderUpdate() }
     }
 
-    suspend fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> = coroutineScope {
-        return@coroutineScope ListWithTotal(0, emptyList()) //TODO: реализовать получение заявок пользователя
+    suspend fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> {
+        return ListWithTotal(0, emptyList()) //TODO: реализовать получение заявок пользователя
     }
 }
