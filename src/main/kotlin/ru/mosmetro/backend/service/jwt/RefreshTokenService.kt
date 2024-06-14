@@ -8,7 +8,7 @@ import ru.mosmetro.backend.util.jpaContext
 class RefreshTokenService(private val refreshTokenRepository: UserRefreshTokenRepository) {
 
     suspend fun isRefreshTokenValid(login: String, refreshToken: String): Boolean {
-        return jpaContext { refreshTokenRepository.findByEmail(login) == refreshToken }
+        return jpaContext { refreshTokenRepository.findByLogin(login) == refreshToken }
     }
 
     fun initUser(login: String) {

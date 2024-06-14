@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class UserRefreshTokenJdbc(private val jdbcTemplate: JdbcTemplate) : UserRefreshTokenRepository {
 
-    override fun findByEmail(login: String): String {
+    override fun findByLogin(login: String): String {
         return jdbcTemplate.queryForObject(
             """
                 SELECT refresh_token FROM user_refresh_token WHERE user_login = ?

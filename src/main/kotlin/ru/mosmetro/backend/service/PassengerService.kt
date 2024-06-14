@@ -12,6 +12,7 @@ import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
 import ru.mosmetro.backend.repository.PassengerCategoryEntityRepository
 import ru.mosmetro.backend.repository.PassengerEntityRepository
+import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
 import ru.mosmetro.backend.util.jpaContext
 
 @Service
@@ -21,6 +22,7 @@ class PassengerService(
     private val lockService: EntityLockService,
     private val subscriptionService: EntitySubscriptionService,
     private val passengerEntityRepository: PassengerEntityRepository,
+    private val passengerPhoneEntityRepository: PassengerPhoneEntityRepository,
     private val passengerCategoryEntityRepository: PassengerCategoryEntityRepository
 ) {
 
@@ -68,6 +70,11 @@ class PassengerService(
             isLockedForEdit = lockService.checkPassengerLock(id),
             data = passenger
         )
+    }
+
+    suspend fun getPassengerPhones(id: Long): List<String> {
+        return jpaContext { passengerPhoneEntityRepository.findByPassengerId(id) }
+            .map { it.phoneNumber }
     }
 
     /**
