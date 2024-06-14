@@ -5,6 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.time.Instant
 
 @Entity
 @Table(name = "order_status")
@@ -15,5 +16,8 @@ data class OrderStatusEntity(
     val code: String,
 
     @Column(name = "name", length = Integer.MAX_VALUE)
-    val name: String
+    val name: String,
+
+    @Column(name = "created_at")
+    val createdAt: Instant?
 )

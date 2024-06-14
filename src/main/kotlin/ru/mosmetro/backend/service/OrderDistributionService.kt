@@ -15,6 +15,7 @@ import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.enums.OrderStatusType
+import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import java.time.Duration
@@ -179,7 +180,7 @@ class OrderDistributionService(
 
     private fun hasSuitableEmployee(
         priorityEmployeeList: List<EmployeePriority>,
-        passengerCategory: PassengerCategory,
+        passengerCategory: PassengerCategoryType,
         baggage: OrderBaggage?,
         sexType: SexType
     ): Boolean {
@@ -214,7 +215,7 @@ class OrderDistributionService(
 
     private fun getMostPriorityEmployee(
         priorityEmployeeList: List<EmployeePriority>,
-        passengerCategory: PassengerCategory, // TODO
+        passengerCategory: PassengerCategoryType, // TODO
         baggage: OrderBaggage?,
         sexType: SexType
     ): EmployeePriority {
@@ -258,8 +259,8 @@ class OrderDistributionService(
                         return@filter true
                     } else {
                         val timeTransferSeconds = metroTransfersService.calculateMetroStationTransfersDuration(
-                            planBefore.last().order!!.finishMetroStation,
-                            order.startMetroStation
+                            planBefore.last().order!!.finishStation,
+                            order.startStation
                         )
 
                         planBefore.last().timeFinish.plusSeconds(timeTransferSeconds)
@@ -290,7 +291,7 @@ class OrderDistributionService(
         orderTime: OrderTime,
         order: PassengerOrder,
     ): Duration {
-        val orderStartStation = order.startMetroStation
+        val orderStartStation = order.startStation
         val employeeStation = getEmployeeStation(orderTime, order)
         return if (employeeStation == null) Duration.ZERO else Duration.ofSeconds(
             metroTransfersService.calculateMetroStationTransfersDuration(
@@ -328,7 +329,7 @@ class OrderDistributionService(
             .filter { it.order != null }
             .sortedBy { it.timeStart }
 
-        return if (planBefore.isEmpty()) null else planBefore.last().order!!.finishMetroStation
+        return if (planBefore.isEmpty()) null else planBefore.last().order!!.finishStation
     }
 
     companion object {
