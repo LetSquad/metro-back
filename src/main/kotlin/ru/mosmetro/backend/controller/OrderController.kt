@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.OrderFilterRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
@@ -39,8 +40,8 @@ class OrderController(
         summary = "Получение всех заявок"
     )
     @GetMapping
-    suspend fun getOrders(): ListWithTotal<PassengerOrderDTO> {
-        return orderService.getOrders()
+    suspend fun getOrders(request: OrderFilterRequestDTO): ListWithTotal<PassengerOrderDTO> {
+        return orderService.getOrders(request)
     }
 
     @Operation(

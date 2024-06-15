@@ -10,12 +10,16 @@ import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.OrderFilterRequestDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
+import ru.mosmetro.backend.model.entity.EmployeeEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
+import ru.mosmetro.backend.repository.EmployeeShiftOrderEntityRepository
 import ru.mosmetro.backend.repository.OrderStatusEntityRepository
 import ru.mosmetro.backend.repository.PassengerOrderEntityRepository
 import ru.mosmetro.backend.util.jpaContext
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
@@ -26,6 +30,7 @@ class OrderService(
     private val subscriptionService: EntitySubscriptionService,
     private val passengerOrderEntityRepository: PassengerOrderEntityRepository,
     private val orderStatusEntityRepository: OrderStatusEntityRepository,
+    private val employeeShiftOrderEntityRepository: EmployeeShiftOrderEntityRepository,
     private val passengerService: PassengerService,
     private val passengerMapper: PassengerMapper,
     private val metroService: MetroService,
@@ -37,11 +42,66 @@ class OrderService(
      * Метод возвращает список заявок в системе
      *
      * */
-    suspend fun getOrders(): ListWithTotal<PassengerOrderDTO> {
-        val passengerOrderDTOS = jpaContext { passengerOrderEntityRepository.findAll() }
+    suspend fun getOrders(r: OrderFilterRequestDTO): ListWithTotal<PassengerOrderDTO> {
+        val dateFrom: Instant = r.dateFrom.toLocalDate()
+            .atStartOfDay()
+            .toInstant(ZoneOffset.UTC)
+        val dateTo: Instant = r.dateTo.toLocalDate()
+            .plusDays(1)
+            .atStartOfDay()
+            .toInstant(ZoneOffset.UTC)
+
+        val passengerOrders = jpaContext { passengerOrderEntityRepository.findAllByOrderTimeBetween(dateFrom, dateTo) }
             .map { orderMapper.entityToDomain(it) }
+            .filter { o ->
+                if (r.passengerFirstName != null && o.passenger.firstName != r.passengerFirstName) {
+                    return@filter false
+                }
+                if (r.passengerLastName != null && o.passenger.lastName != r.passengerLastName) {
+                    return@filter false
+                }
+                if (r.passengerPhone != null &&
+                    passengerService.getPassengerPhones(o.passenger.id!!).contains(r.passengerPhone)
+                ) {
+                    return@filter false
+                }
+
+                if (r.employeeFirstName != null || r.employeeLastName != null || r.employeePhone != null) {
+                    val employees: List<EmployeeEntity> = employeeShiftOrderEntityRepository.findAllByOrderId(o.id!!)
+                        .map { it.employeeShift.employee }
+
+                    return@filter employees.any { e ->
+                        if (r.employeeFirstName != null && e.firstName != r.employeeFirstName) {
+                            return@any false
+                        }
+                        if (r.employeeLastName != null && e.lastName != r.employeeLastName) {
+                            return@any false
+                        }
+                        if (r.employeePhone != null &&
+                            (e.workPhone != r.employeePhone || e.personalPhone != r.employeePhone)
+                        ) {
+                            return@any false
+                        }
+
+                        return@any true
+                    }
+                }
+
+                if (r.orderCategories != null &&
+                    (!r.orderCategories.contains(o.passengerCategory.name))
+                ) {
+                    return@filter false
+                }
+
+                if (r.orderStatuses != null && !r.orderStatuses.contains(o.orderStatus.code.name)) {
+                    return@filter false
+                }
+
+                return@filter true
+            }
             .map { orderMapper.domainToDto(it) }
-        return ListWithTotal(passengerOrderDTOS.size, passengerOrderDTOS)
+
+        return ListWithTotal(passengerOrders.size, passengerOrders)
     }
 
     fun getOrdersBetweenStartDate(

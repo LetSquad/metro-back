@@ -21,7 +21,7 @@ data class PassengerPhoneEntity(
     val id: Long?,
 
     @Column(name = "phone_number", length = Integer.MAX_VALUE)
-    val phoneNumber: String?,
+    val phoneNumber: String,
 
     @Column(name = "description", length = Integer.MAX_VALUE)
     val description: String?,
