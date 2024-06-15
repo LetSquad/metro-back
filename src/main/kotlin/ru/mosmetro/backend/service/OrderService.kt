@@ -100,6 +100,7 @@ class OrderService(
 
                 return@filter true
             }
+            .sortedBy { it.orderTime }
             .map { orderMapper.domainToDto(it) }
 
         return ListWithTotal(passengerOrders.size, passengerOrders)

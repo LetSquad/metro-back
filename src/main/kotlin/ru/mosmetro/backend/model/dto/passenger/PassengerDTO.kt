@@ -19,5 +19,7 @@ data class PassengerDTO(
     @Schema(description = "Флаг наличия сопровождающего")
     val hasPacemaker: Boolean?,
     @Schema(description = "Категория пассажира")
-    val category: PassengerCategoryDTO
+    val category: PassengerCategoryDTO,
+    @Schema(description = "Телефоны пассажира")
+    val phones: Set<String>
 )

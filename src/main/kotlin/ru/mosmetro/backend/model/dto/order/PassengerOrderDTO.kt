@@ -54,5 +54,5 @@ data class PassengerOrderDTO(
     @Schema(description = "Конечная станция маршрута")
     val finishStation: MetroStationDTO,
     @Schema(description = "Сотрудники, прикрепленные к заявке")
-    val employee: Set<EmployeeDTO>
+    val employees: Set<EmployeeDTO>
 )
