@@ -85,7 +85,7 @@ data class PassengerOrderEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_status_code")
-    val orderStatusCode: OrderStatusEntity,
+    var orderStatusCode: OrderStatusEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passenger_id")

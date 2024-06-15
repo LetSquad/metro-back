@@ -19,6 +19,7 @@ import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.UpdateOrderStatusDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
 import ru.mosmetro.backend.service.MetroTransfersService
 import ru.mosmetro.backend.service.OrderDistributionService
@@ -78,6 +79,17 @@ class OrderController(
         @RequestBody updatedPassengerOrderDTO: UpdatedPassengerOrderDTO
     ): PassengerOrderDTO {
         return orderService.updateOrder(id, updatedPassengerOrderDTO)
+    }
+
+    @Operation(
+        summary = "Обновление статуса заявки по её идентификатору"
+    )
+    @PutMapping("{orderId}/status")
+    suspend fun updateOrderStatus(
+        @Parameter(description = "ID заявки") @PathVariable orderId: Long,
+        @RequestBody updateOrderStatusDTO: UpdateOrderStatusDTO
+    ): PassengerOrderDTO {
+        return orderService.updateOrderStatus(orderId, updateOrderStatusDTO)
     }
 
     @Operation(
