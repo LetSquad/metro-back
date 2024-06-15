@@ -12,6 +12,7 @@ import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderFilterRequestDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.UpdateOrderStatusDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
 import ru.mosmetro.backend.model.entity.EmployeeEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
@@ -210,5 +211,33 @@ class OrderService(
 
     suspend fun getCurrentUserOrders(): ListWithTotal<PassengerOrderDTO> {
         return ListWithTotal(0, emptyList()) //TODO: реализовать получение заявок пользователя
+    }
+
+    /**
+     *
+     * Метод обновляет статус заявки
+     *
+     * @param id - идентификатор заявки
+     * @param dto - новый статус заявки
+     *
+     * */
+    suspend fun updateOrderStatus(
+        id: Long,
+        dto: UpdateOrderStatusDTO
+    ): PassengerOrderDTO {
+        val orderEntity = jpaContext { passengerOrderEntityRepository.findById(id) }
+            .orElseThrow { NoSuchOrderException(id) }
+        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(dto.status) }
+            .orElseThrow { EntityNotFoundException(dto.status) }
+
+        return dto
+            .let {
+                orderEntity.orderStatusCode = orderStatusEntity
+                return@let orderEntity
+            }
+            .let { passengerOrderEntityRepository.save(it) }
+            .also { subscriptionService.notifyOrderUpdate() }
+            .let { orderMapper.entityToDomain(it) }
+            .let { orderMapper.domainToDto(it) }
     }
 }
