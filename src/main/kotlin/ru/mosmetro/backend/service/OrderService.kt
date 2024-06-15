@@ -133,7 +133,7 @@ class OrderService(
         return@coroutineScope updatedPassengerOrderDTO
             .let { orderMapper.dtoToDomain(it, passengerOrderEntity.createdAt, id) }
             .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerEntity, startStation, finishStation) }
-            .let { passengerOrderEntityRepository.save(it) }
+            .let { jpaContext { passengerOrderEntityRepository.save(it) } }
             .also { subscriptionService.notifyOrderUpdate() }
             .let { orderMapper.entityToDomain(it) }
             .let { orderMapper.domainToDto(it) }
