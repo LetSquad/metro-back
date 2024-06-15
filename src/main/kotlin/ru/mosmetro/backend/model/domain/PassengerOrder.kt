@@ -1,5 +1,7 @@
 package ru.mosmetro.backend.model.domain
 
+import ru.mosmetro.backend.model.enums.OrderApplicationType
+import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import java.time.Duration
 import java.time.Instant
 
@@ -7,7 +9,7 @@ data class PassengerOrder(
     val id: Long?,
     val startDescription: String?,
     val finishDescription: String?,
-    val orderApplication: OrderApplication,
+    val orderApplication: OrderApplicationType?,
     val passengerCount: Int,
     val maleEmployeeCount: Int,
     val femaleEmployeeCount: Int,
@@ -25,7 +27,8 @@ data class PassengerOrder(
     val passenger: Passenger,
     val baggage: OrderBaggage?,
     val transfers: List<MetroStationTransfer>,
-    val passengerCategory: PassengerCategory,
-    val startMetroStation: MetroStation,
-    val finishMetroStation: MetroStation,
+    val passengerCategory: PassengerCategoryType,
+    val startStation: MetroStation,
+    val finishStation: MetroStation,
+    val employees: Set<Employee>?
 )

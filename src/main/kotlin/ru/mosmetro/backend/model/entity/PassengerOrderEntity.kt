@@ -76,6 +76,9 @@ data class PassengerOrderEntity(
     @Column(name = "deleted_at")
     val deletedAt: Instant?,
 
+    @Column(name = "order_application")
+    val orderApplication: String?,
+
     @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
     @Column(name = "duration", columnDefinition = "interval")
     val duration: Duration,

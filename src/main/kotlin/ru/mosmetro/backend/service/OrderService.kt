@@ -12,6 +12,7 @@ import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
+import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.repository.OrderStatusEntityRepository
 import ru.mosmetro.backend.repository.PassengerOrderEntityRepository
 import ru.mosmetro.backend.util.jpaContext
@@ -82,21 +83,19 @@ class OrderService(
      *
      * */
     suspend fun createOrder(newPassengerOrderDTO: NewPassengerOrderDTO): PassengerOrderDTO {
-        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(newPassengerOrderDTO.orderStatus.code.name) }
-            .orElseThrow { EntityNotFoundException(newPassengerOrderDTO.orderStatus.code.name) }
-        val passengerEntity = passengerService.getPassengerById(newPassengerOrderDTO.passenger.id!!).data
+        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(OrderStatusType.REVIEW.name) }
+            .orElseThrow { EntityNotFoundException(OrderStatusType.REVIEW.name) }
+        val passenger = passengerService.getPassengerById(newPassengerOrderDTO.passenger).data
             .let { passengerMapper.dtoToDomain(it) }
-            .let { passengerMapper.domainToEntity(it) }
-        val startStation = metroService.getMetroStationById(newPassengerOrderDTO.startMetroStation.id!!)
+        val startStation = metroService.getMetroStationById(newPassengerOrderDTO.startStation)
             .let { metroStationMapper.dtoToDomain(it) }
-            .let { metroStationMapper.domainToEntity(it) }
-        val finishStation = metroService.getMetroStationById(newPassengerOrderDTO.finishMetroStation.id!!)
+        val finishStation = metroService.getMetroStationById(newPassengerOrderDTO.finishStation)
             .let { metroStationMapper.dtoToDomain(it) }
-            .let { metroStationMapper.domainToEntity(it) }
 
         return newPassengerOrderDTO
-            .let { orderMapper.dtoToDomain(it) }
-            .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerEntity, startStation, finishStation) }
+            .let { orderMapper.dtoToDomain(it, startStation, finishStation, passenger) }
+            .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
+                metroStationMapper.domainToEntity(startStation), metroStationMapper.domainToEntity(finishStation)) }
             .let { jpaContext { passengerOrderEntityRepository.save(it) } }
             .also { subscriptionService.notifyOrderUpdate() }
             .let { orderMapper.entityToDomain(it) }
@@ -116,22 +115,21 @@ class OrderService(
         val passengerOrderEntity = jpaContext { passengerOrderEntityRepository.findById(id) }
             .orElseThrow { NoSuchOrderException(id) }
 
-        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(updatedPassengerOrderDTO.orderStatus.code.name) }
-            .orElseThrow { EntityNotFoundException(updatedPassengerOrderDTO.orderStatus.code.name) }
+        //TODO Поправить тут логику на нужную
+        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(OrderStatusType.ACCEPTED.name) }
+            .orElseThrow { EntityNotFoundException(OrderStatusType.REVIEW.name) }
 
-        val passengerEntity = passengerService.getPassengerById(updatedPassengerOrderDTO.passenger.id!!).data
+        val passenger = passengerService.getPassengerById(updatedPassengerOrderDTO.passenger).data
             .let { passengerMapper.dtoToDomain(it) }
-            .let { passengerMapper.domainToEntity(it) }
-        val startStation = metroService.getMetroStationById(updatedPassengerOrderDTO.startStation.id!!)
+        val startStation = metroService.getMetroStationById(updatedPassengerOrderDTO.startStation)
             .let { metroStationMapper.dtoToDomain(it) }
-            .let { metroStationMapper.domainToEntity(it) }
-        val finishStation = metroService.getMetroStationById(updatedPassengerOrderDTO.finishStation.id!!)
+        val finishStation = metroService.getMetroStationById(updatedPassengerOrderDTO.finishStation)
             .let { metroStationMapper.dtoToDomain(it) }
-            .let { metroStationMapper.domainToEntity(it) }
 
         return updatedPassengerOrderDTO
-            .let { orderMapper.dtoToDomain(it, passengerOrderEntity.createdAt, id) }
-            .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerEntity, startStation, finishStation) }
+            .let { orderMapper.dtoToDomain(it, passengerOrderEntity.createdAt, id, startStation, finishStation, passenger) }
+            .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
+                metroStationMapper.domainToEntity(startStation), metroStationMapper.domainToEntity(finishStation)) }
             .let { passengerOrderEntityRepository.save(it) }
             .also { subscriptionService.notifyOrderUpdate() }
             .let { orderMapper.entityToDomain(it) }
