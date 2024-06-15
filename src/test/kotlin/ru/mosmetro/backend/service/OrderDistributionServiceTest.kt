@@ -438,6 +438,158 @@ class OrderDistributionServiceTest {
     }
 
     @Test
+    fun WHEN_employee_1m_0f_AND_order_3_AND_orders_3_parallel_AND_orders_created_in_diff_times() {
+        // mock
+        val date = LocalDate.of(2024, 1, 1)
+
+        val employee1 = makeEmployee(
+            id = 1,
+            sex = SexType.MALE,
+            workStart = LocalTime.of(9, 0),
+            workFinish = LocalTime.of(18, 0),
+            lightDuties = false,
+        )
+        val orderTimeDB: List<OrderTime> =
+            listOf(
+                // plan empty
+                makeOrderTime(
+                    employee1,
+                    listOf()
+                )
+            )
+        mockGetEmployeeTImePlanDB(date, orderTimeDB)
+
+        // 1 --300--> 2 --300--> 3 --300--> 4
+        val station1 = makeMetroStation("station-1")
+        val station2 = makeMetroStation("station-2")
+        val station3 = makeMetroStation("station-3")
+        val station4 = makeMetroStation("station-4")
+        mockSimpleMetroLine(station1, station2, station3, station4)
+
+        val order1 =
+            makePassengerOrder(
+                id = 1,
+                maleEmployeeCount = 1,
+                femaleEmployeeCount = 0,
+                createdAt = LocalDateTime.of(date, LocalTime.of(0, 15)),
+                orderTime = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                finishTime = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                orderStatusType = OrderStatusType.WAITING_LIST,
+                baggage = null,
+                passengerCategory = PassengerCategory(
+                    code = PassengerCategoryType.PL,
+                    name = "",
+                    shortName = ""
+                ),
+                startMetroStation = station1,
+                finishMetroStation = station2,
+            )
+        val order2 =
+            makePassengerOrder(
+                id = 2,
+                maleEmployeeCount = 1,
+                femaleEmployeeCount = 0,
+                createdAt = LocalDateTime.of(date, LocalTime.of(0, 10)),
+                orderTime = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                finishTime = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                orderStatusType = OrderStatusType.WAITING_LIST,
+                baggage = null,
+                passengerCategory = PassengerCategory(
+                    code = PassengerCategoryType.PL,
+                    name = "",
+                    shortName = ""
+                ),
+                startMetroStation = station3,
+                finishMetroStation = station4,
+            )
+        val order3 =
+            makePassengerOrder(
+                id = 2,
+                maleEmployeeCount = 1,
+                femaleEmployeeCount = 0,
+                createdAt = LocalDateTime.of(date, LocalTime.of(0, 5)),
+                orderTime = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                finishTime = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                orderStatusType = OrderStatusType.WAITING_LIST,
+                baggage = null,
+                passengerCategory = PassengerCategory(
+                    code = PassengerCategoryType.PL,
+                    name = "",
+                    shortName = ""
+                ),
+                startMetroStation = station1,
+                finishMetroStation = station4,
+            )
+        val orders: List<PassengerOrder> = listOf(order1, order2, order3)
+
+        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date, METRO_WORK_TIME_FINISH)
+        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+
+        // act
+        val service = getService()
+        var result = service.calculateOrderDistribution(date)
+        val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
+        val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
+
+        // assert
+        val expectedOrdersNotInPlan: List<PassengerOrderDTO> =
+            listOf(
+                orderMapper.domainToDto(order1),
+                orderMapper.domainToDto(order2)
+            )
+        assertEquals(expectedOrdersNotInPlan.size, actualOrdersNotInPlan.size)
+        assertTrue(expectedOrdersNotInPlan.containsAll(actualOrdersNotInPlan))
+        assertTrue(actualOrdersNotInPlan.containsAll(expectedOrdersNotInPlan))
+
+        val expectedOrdersTime: List<OrderTimeDTO> =
+            listOf(
+                makeOrderTimeDTO(
+                    employee1,
+                    listOf(
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
+                            actionType = TimeListActionType.NON_WORKING,
+                            order = null,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(9, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                            actionType = TimeListActionType.ORDER,
+                            order = order3,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(18, 0)),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
+                            timeFinish = LocalDateTime.of(date, METRO_WORK_TIME_FINISH),
+                            actionType = TimeListActionType.NON_WORKING,
+                            order = null,
+                        ),
+                    )
+                )
+            )
+        assertOrderTimeDTOList(
+            actualOrdersTime.sortedBy { it.employee.id },
+            expectedOrdersTime.sortedBy { it.employee.id })
+    }
+
+    @Test
     fun WHEN_employee_1m_0f_AND_order_3_AND_order_2_parallel() {
         // mock
         val date = LocalDate.of(2024, 1, 1)
@@ -582,6 +734,178 @@ class OrderDistributionServiceTest {
                             timeFinish = LocalDateTime.of(date, LocalTime.of(13, 0)),
                             actionType = TimeListActionType.ORDER,
                             order = order2,
+                        ),
+
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(13, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(18, 0)),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
+                            timeFinish = LocalDateTime.of(date, METRO_WORK_TIME_FINISH),
+                            actionType = TimeListActionType.NON_WORKING,
+                            order = null,
+                        ),
+                    )
+                )
+            )
+        assertOrderTimeDTOList(
+            actualOrdersTime.sortedBy { it.employee.id },
+            expectedOrdersTime.sortedBy { it.employee.id })
+    }
+
+    @Test
+    fun WHEN_employee_1m_0f_AND_order_3_AND_order_2_parallel_BUT_o3_created_early() {
+        // mock
+        val date = LocalDate.of(2024, 1, 1)
+
+        val employee1 = makeEmployee(
+            id = 1,
+            sex = SexType.MALE,
+            workStart = LocalTime.of(9, 0),
+            workFinish = LocalTime.of(18, 0),
+            lightDuties = false,
+        )
+        val orderTimeDB: List<OrderTime> =
+            listOf(
+                // plan empty
+                makeOrderTime(
+                    employee1,
+                    listOf()
+                )
+            )
+        mockGetEmployeeTImePlanDB(date, orderTimeDB)
+
+        // 1 --300--> 2 --300--> 3 --300--> 4
+        val station1 = makeMetroStation("station-1")
+        val station2 = makeMetroStation("station-2")
+        val station3 = makeMetroStation("station-3")
+        val station4 = makeMetroStation("station-4")
+        mockSimpleMetroLine(station1, station2, station3, station4)
+
+        val order1 =
+            makePassengerOrder(
+                id = 1,
+                maleEmployeeCount = 1,
+                femaleEmployeeCount = 0,
+                createdAt = LocalDateTime.of(date, LocalTime.of(0, 30)),
+                orderTime = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                finishTime = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                orderStatusType = OrderStatusType.WAITING_LIST,
+                baggage = null,
+                passengerCategory = PassengerCategory(
+                    code = PassengerCategoryType.PL,
+                    name = "",
+                    shortName = ""
+                ),
+                startMetroStation = station1,
+                finishMetroStation = station2,
+            )
+        val order2 =
+            makePassengerOrder(
+                id = 2,
+                maleEmployeeCount = 1,
+                femaleEmployeeCount = 0,
+                createdAt = LocalDateTime.of(date, LocalTime.of(0, 20)),
+                orderTime = LocalDateTime.of(date, LocalTime.of(12, 0)),
+                finishTime = LocalDateTime.of(date, LocalTime.of(13, 0)),
+                orderStatusType = OrderStatusType.WAITING_LIST,
+                baggage = null,
+                passengerCategory = PassengerCategory(
+                    code = PassengerCategoryType.PL,
+                    name = "",
+                    shortName = ""
+                ),
+                startMetroStation = station3,
+                finishMetroStation = station4,
+            )
+        val order3 =
+            makePassengerOrder(
+                id = 2,
+                maleEmployeeCount = 1,
+                femaleEmployeeCount = 0,
+                createdAt = LocalDateTime.of(date, LocalTime.of(0, 10)),
+                orderTime = LocalDateTime.of(date, LocalTime.of(12, 0)),
+                finishTime = LocalDateTime.of(date, LocalTime.of(13, 0)),
+                orderStatusType = OrderStatusType.WAITING_LIST,
+                baggage = null,
+                passengerCategory = PassengerCategory(
+                    code = PassengerCategoryType.PL,
+                    name = "",
+                    shortName = ""
+                ),
+                startMetroStation = station1,
+                finishMetroStation = station4,
+            )
+        val orders: List<PassengerOrder> = listOf(order1, order2, order3)
+
+        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date, METRO_WORK_TIME_FINISH)
+        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+
+        // act
+        val service = getService()
+        var result = service.calculateOrderDistribution(date)
+        val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
+        val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
+
+        // assert
+        val expectedOrdersNotInPlan: List<PassengerOrderDTO> =
+            listOf(
+                orderMapper.domainToDto(order2)
+            )
+        assertEquals(expectedOrdersNotInPlan.size, actualOrdersNotInPlan.size)
+        assertTrue(expectedOrdersNotInPlan.containsAll(actualOrdersNotInPlan))
+        assertTrue(actualOrdersNotInPlan.containsAll(expectedOrdersNotInPlan))
+
+        val expectedOrdersTime: List<OrderTimeDTO> =
+            listOf(
+                makeOrderTimeDTO(
+                    employee1,
+                    listOf(
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
+                            actionType = TimeListActionType.NON_WORKING,
+                            order = null,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(9, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(10, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                            actionType = TimeListActionType.ORDER,
+                            order = order1,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(11, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(11, 55)),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null,
+                        ),
+
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(11, 55)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(12, 0)),
+                            actionType = TimeListActionType.TRANSFER,
+                            order = null,
+                        ),
+                        makeEmployeeShiftOrderDTO(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(12, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(13, 0)),
+                            actionType = TimeListActionType.ORDER,
+                            order = order3,
                         ),
 
 

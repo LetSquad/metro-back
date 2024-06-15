@@ -60,7 +60,7 @@ class OrderDistributionService(
         val passengerOrderList =
             orderService.getOrdersBetweenStartDate(orderStartTime, orderFinishTime)
                 .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
-                .sortedBy { it.orderTime }
+                .sortedWith(compareBy({ it.orderTime }, { it.createdAt }))
 
         if (guessBreakTime) {
             breakTimeGuesserService.guessBreakTime(planDate, employeeTimePlanList, passengerOrderList)
