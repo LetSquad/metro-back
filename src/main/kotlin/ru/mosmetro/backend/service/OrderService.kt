@@ -191,7 +191,7 @@ class OrderService(
             .let { orderMapper.dtoToDomain(it, passengerOrderEntity.createdAt, id, startStation, finishStation, passenger) }
             .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
                 metroStationMapper.domainToEntity(startStation), metroStationMapper.domainToEntity(finishStation)) }
-            .let { passengerOrderEntityRepository.save(it) }
+            .let { jpaContext { passengerOrderEntityRepository.save(it) } }
             .also { subscriptionService.notifyOrderUpdate() }
             .let { orderMapper.entityToDomain(it) }
             .let { orderMapper.domainToDto(it) }
@@ -235,7 +235,7 @@ class OrderService(
                 orderEntity.orderStatusCode = orderStatusEntity
                 return@let orderEntity
             }
-            .let { passengerOrderEntityRepository.save(it) }
+            .let { jpaContext { passengerOrderEntityRepository.save(it) } }
             .also { subscriptionService.notifyOrderUpdate() }
             .let { orderMapper.entityToDomain(it) }
             .let { orderMapper.domainToDto(it) }
