@@ -18,6 +18,7 @@ import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.enums.EmployeeRoleType
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.SexType
+import ru.mosmetro.backend.model.enums.TimeListActionType
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -119,6 +120,20 @@ object ServiceTestUtil {
             passengerCategory = passengerCategory,
             startMetroStation = startMetroStation,
             finishMetroStation = finishMetroStation,
+        )
+    }
+
+    fun makeEmployeeShiftOrder(
+        timeStart: LocalDateTime,
+        timeFinish: LocalDateTime,
+        actionType: TimeListActionType,
+        order: PassengerOrder?,
+    ): EmployeeShiftOrder {
+        return EmployeeShiftOrder(
+            timeStart = timeStart,
+            timeFinish = timeFinish,
+            actionType = actionType,
+            order = order
         )
     }
 

@@ -30,6 +30,7 @@ class OrderDistributionService(
     private val timeListService: TimeListService,
     private val orderService: OrderService,
     private val metroTransfersService: MetroTransfersService,
+    private val breakTimeGuesserService: BreakTimeGuesserService,
 
     private val employeeMapper: EmployeeMapper,
     private val orderMapper: OrderMapper,
@@ -38,6 +39,13 @@ class OrderDistributionService(
 
     fun calculateOrderDistribution(
         planDate: LocalDate
+    ): OrderTimeListDTO {
+        return calculateOrderDistribution(planDate, false)
+    }
+
+    fun calculateOrderDistribution(
+        planDate: LocalDate,
+        guessBreakTime: Boolean
     ): OrderTimeListDTO {
         subscriptionService.notifyOrderUpdate()
 
@@ -53,6 +61,10 @@ class OrderDistributionService(
             orderService.getOrdersBetweenStartDate(orderStartTime, orderFinishTime)
                 .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
                 .sortedBy { it.orderTime }
+
+        if (guessBreakTime) {
+            breakTimeGuesserService.guessBreakTime(planDate, employeeTimePlanList, passengerOrderList)
+        }
 
         val orderNotInPlanList: MutableList<PassengerOrder> = mutableListOf()
 

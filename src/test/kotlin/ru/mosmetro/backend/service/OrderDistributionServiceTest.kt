@@ -10,7 +10,6 @@ import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftOrderMapper
 import ru.mosmetro.backend.mapper.OrderMapper
 import ru.mosmetro.backend.model.domain.Employee
-import ru.mosmetro.backend.model.domain.EmployeeShiftOrder
 import ru.mosmetro.backend.model.domain.MetroStation
 import ru.mosmetro.backend.model.domain.OrderTime
 import ru.mosmetro.backend.model.domain.PassengerCategory
@@ -26,6 +25,7 @@ import ru.mosmetro.backend.service.ServiceTestUtil.METRO_WORK_TIME_FINISH
 import ru.mosmetro.backend.service.ServiceTestUtil.METRO_WORK_TIME_START
 import ru.mosmetro.backend.service.ServiceTestUtil.assertOrderTimeDTOList
 import ru.mosmetro.backend.service.ServiceTestUtil.makeEmployee
+import ru.mosmetro.backend.service.ServiceTestUtil.makeEmployeeShiftOrder
 import ru.mosmetro.backend.service.ServiceTestUtil.makeMetroStation
 import ru.mosmetro.backend.service.ServiceTestUtil.makeOrderBaggage
 import ru.mosmetro.backend.service.ServiceTestUtil.makeOrderTime
@@ -60,6 +60,9 @@ class OrderDistributionServiceTest {
 
     @MockBean
     lateinit var metroTransfersService: MetroTransfersService
+
+    @MockBean
+    lateinit var breakTimeGuesserService: BreakTimeGuesserService
 
     @Test
     fun WHEN_employee_1m_0f_AND_order_3() {
@@ -1977,20 +1980,6 @@ class OrderDistributionServiceTest {
         )
     }
 
-    private fun makeEmployeeShiftOrder(
-        timeStart: LocalDateTime,
-        timeFinish: LocalDateTime,
-        actionType: TimeListActionType,
-        order: PassengerOrder?,
-    ): EmployeeShiftOrder {
-        return EmployeeShiftOrder(
-            timeStart = timeStart,
-            timeFinish = timeFinish,
-            actionType = actionType,
-            order = order
-        )
-    }
-
     private fun mockSimpleMetroLine(
         station1: MetroStation,
         station2: MetroStation,
@@ -2043,6 +2032,7 @@ class OrderDistributionServiceTest {
         timeListService,
         orderService,
         metroTransfersService,
+        breakTimeGuesserService,
 
         employeeMapper,
         orderMapper,
