@@ -85,7 +85,7 @@ class OrderMapper(
         passenger = passengerMapper.domainToDto(mapper.passenger),
         passengerCategory = mapper.passengerCategory,
         transfers = mapper.transfers.map { metroStationTransferMapper.domainToDto(it) },
-        employee = emptySet()
+        employees = emptySet()
     )
 
     fun dtoToDomain(mapper: NewPassengerOrderDTO, startStation: MetroStation, finishStation: MetroStation, passenger: Passenger) = PassengerOrder(

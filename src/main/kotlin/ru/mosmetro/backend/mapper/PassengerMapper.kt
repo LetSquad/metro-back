@@ -85,6 +85,7 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
         sex = mapper.sex,
         comment = mapper.comment,
         hasPacemaker = mapper.hasPacemaker,
-        category = passengerCategoryMapper.domainToDto(mapper.category)
+        category = passengerCategoryMapper.domainToDto(mapper.category),
+        phones = emptySet() //TODO: fill phones
     )
 }
