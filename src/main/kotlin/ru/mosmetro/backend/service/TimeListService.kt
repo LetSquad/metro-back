@@ -31,7 +31,7 @@ class TimeListService(
     ): List<OrderTime> {
        return plan.map {
             val actionNonWorkingTimeList = addNonWorkingTime(it.timePlan, it.employee.workStart, it.employee.workFinish, timePlanDate)
-            val actionDownTimeList = addDownTimeTime(actionNonWorkingTimeList, timePlanDate)
+            val actionDownTimeList = addDownTimeTime(actionNonWorkingTimeList, it.employee.workStart, it.employee.workFinish, timePlanDate)
 
             OrderTime(
                 employee = it.employee,
@@ -40,7 +40,6 @@ class TimeListService(
         }
     }
 
-    // TODO пока без переноса дня работы, все в рамках одного дня
     fun getOrderTimeListWithAllTime(
         timePlanDate: LocalDate
     ): OrderTimeListDTO {
@@ -55,7 +54,7 @@ class TimeListService(
                             .filter { it.isAttached }
                             .map { employeeShiftOrderMapper.entityToDomain(it) }
                     val actionNonWorkingTimeList = addNonWorkingTime(actionOrderTimeList, employeeShift.workStart, employeeShift.workFinish, timePlanDate)
-                    val actionDownTimeList = addDownTimeTime(actionNonWorkingTimeList, timePlanDate)
+                    val actionDownTimeList = addDownTimeTime(actionNonWorkingTimeList,  employeeShift.workStart, employeeShift.workFinish, timePlanDate)
 
                     OrderTimeDTO(
                         employee = employeeShift.employee.let { employeeMapper.domainToDto(it) },
@@ -69,7 +68,6 @@ class TimeListService(
         )
     }
 
-    // TODO пока без переноса дня работы, все в рамках одного дня
     fun getOrderTimeList(
         timePlanDate: LocalDate
     ): List<OrderTime> {
@@ -97,23 +95,43 @@ class TimeListService(
         date: LocalDate
     ): List<EmployeeShiftOrder> {
         val result: MutableList<EmployeeShiftOrder> = mutableListOf()
+// 20 - 8
+        if (workStart > workFinish) {
+            result.add(
+                EmployeeShiftOrder(
+                    timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                    timeFinish = LocalDateTime.of(date, workStart),
+                    actionType = TimeListActionType.NON_WORKING,
+                    order = null
+                )
+            )
+            result.add(
+                EmployeeShiftOrder(
+                    timeStart = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
+                    timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_START),
+                    actionType = TimeListActionType.METRO_NOT_WORKING,
+                    order = null
+                )
+            )
+        } else {
+            result.add(
+                EmployeeShiftOrder(
+                    timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                    timeFinish = LocalDateTime.of(date, workStart),
+                    actionType = TimeListActionType.NON_WORKING,
+                    order = null
+                )
+            )
+            result.add(
+                EmployeeShiftOrder(
+                    timeStart = LocalDateTime.of(date, workFinish),
+                    timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
+                    actionType = TimeListActionType.NON_WORKING,
+                    order = null
+                )
+            )
+        }
 
-        result.add(
-            EmployeeShiftOrder(
-                timeStart = LocalDateTime.of(date, METRO_TIME_START),
-                timeFinish = LocalDateTime.of(date, workStart),
-                actionType = TimeListActionType.NON_WORKING,
-                order = null
-            )
-        )
-        result.add(
-            EmployeeShiftOrder(
-                timeStart = LocalDateTime.of(date, workFinish),
-                timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
-                actionType = TimeListActionType.NON_WORKING,
-                order = null
-            )
-        )
         result.addAll(actions)
 
         return result
@@ -121,17 +139,19 @@ class TimeListService(
 
     private fun addDownTimeTime(
         actions: List<EmployeeShiftOrder>,
+        workStart: LocalTime,
+        workFinish: LocalTime,
         date: LocalDate
     ): List<EmployeeShiftOrder> {
         val result: MutableList<EmployeeShiftOrder> = mutableListOf()
-
+        val endWork = if (workStart > workFinish) LocalDateTime.of(date.plusDays(1), workFinish) else LocalDateTime.of(date, workFinish)
         actions
             .sortedBy { it.timeStart }
             .let {
                 for ((index, value) in it.withIndex()) {
                     // первое время
                     if (index == 0) {
-                        if (value.timeStart.toLocalTime() > METRO_TIME_START) {
+                        if (value.timeStart > LocalDateTime.of(date, METRO_TIME_START)) {
                             result.add(
                                 EmployeeShiftOrder(
                                     timeStart = LocalDateTime.of(date, METRO_TIME_START),
@@ -156,11 +176,11 @@ class TimeListService(
                             )
                         }
                     // последнее время
-                    } else if (value.timeFinish.toLocalTime() < METRO_TIME_FINISH) {
+                    } else if (value.timeFinish <= endWork) {
                         result.add(
                             EmployeeShiftOrder(
                                 timeStart = value.timeFinish,
-                                timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                                timeFinish = endWork,
                                 actionType = TimeListActionType.DOWNTIME,
                                 order = null
                             )
@@ -176,7 +196,7 @@ class TimeListService(
 
     companion object {
         private val METRO_TIME_START = LocalTime.of(5, 30)
-        private val METRO_TIME_FINISH = LocalTime.of(23, 59)
+        private val METRO_TIME_FINISH = LocalTime.of(1, 0)
         private val TIME_ZONE_UTC = ZoneId.of("UTC")
     }
 }

@@ -165,9 +165,8 @@ class TimeListServiceTest {
                             order = null
                         ),
                         makeEmployeeShiftOrder(
-                            date = date,
-                            timeStart = LocalTime.of(18, 0),
-                            timeFinish = METRO_WORK_TIME_FINISH,
+                            timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
                         ),
@@ -212,12 +211,115 @@ class TimeListServiceTest {
                             order = null
                         ),
                         makeEmployeeShiftOrder(
-                            date = date,
-                            timeStart = LocalTime.of(22, 0),
-                            timeFinish = METRO_WORK_TIME_FINISH,
+                            timeStart = LocalDateTime.of(date, LocalTime.of(22, 0)),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
                         ),
+                    )
+                ),
+            )
+
+        ServiceTestUtil.assertOrderTimeList(
+            actual.sortedBy { it.employee.id },
+            expected.sortedBy { it.employee.id })
+    }
+
+    @Test
+    fun test_addAllTime_withAllMetroWorkDay() {
+        // mock
+        val date = LocalDate.of(2024, 1, 1)
+
+        val employee1 = ServiceTestUtil.makeEmployee(
+            id = 1,
+            sex = SexType.MALE,
+            workStart = LocalTime.of(20, 0),
+            workFinish = LocalTime.of(8, 0),
+            lightDuties = false,
+        )
+
+        val plan: List<OrderTime> =
+            listOf(
+                makeOrderTime(
+                    employee = employee1,
+                    plan = listOf(
+                        makeEmployeeShiftOrder(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(21, 0)),
+                            timeFinish = LocalDateTime.of(date, LocalTime.of(22, 0)),
+                            actionType = TimeListActionType.BREAK,
+                            order = null,
+                        ),
+                        makeEmployeeShiftOrder(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(23, 0)),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), LocalTime.of(0, 30)),
+                            actionType = TimeListActionType.BREAK,
+                            order = null,
+                        ),
+                    )
+                ),
+            )
+
+        // act
+        val actual: List<OrderTime> = service.addAllTime(date, plan)
+
+        // assert
+        val expected =
+            listOf(
+                makeOrderTime(
+                    employee1,
+                    listOf(
+                        makeEmployeeShiftOrder(
+                            date = date,
+                            timeStart = METRO_WORK_TIME_START,
+                            timeFinish = LocalTime.of(20, 0),
+                            actionType = TimeListActionType.NON_WORKING,
+                            order = null
+                        ),
+                        makeEmployeeShiftOrder(
+                            date = date,
+                            timeStart = LocalTime.of(20, 0),
+                            timeFinish = LocalTime.of(21, 0),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null
+                        ),
+                        makeEmployeeShiftOrder(
+                            date = date,
+                            timeStart = LocalTime.of(21, 0),
+                            timeFinish = LocalTime.of(22, 0),
+                            actionType = TimeListActionType.BREAK,
+                            order = null
+                        ),
+                        makeEmployeeShiftOrder(
+                            date = date,
+                            timeStart = LocalTime.of(22, 0),
+                            timeFinish = LocalTime.of(23, 0),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null
+                        ),
+                        makeEmployeeShiftOrder(
+                            timeStart = LocalDateTime.of(date, LocalTime.of(23, 0)),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), LocalTime.of(0, 30)),
+                            actionType = TimeListActionType.BREAK,
+                            order = null
+                        ),
+                        makeEmployeeShiftOrder(
+                            timeStart = LocalDateTime.of(date.plusDays(1), LocalTime.of(0, 30)),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null
+                        ),
+                        makeEmployeeShiftOrder(
+                            timeStart = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_START),
+                            actionType = TimeListActionType.METRO_NOT_WORKING,
+                            order = null
+                        ),
+                        makeEmployeeShiftOrder(
+                            timeStart = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_START),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), LocalTime.of(8, 0)),
+                            actionType = TimeListActionType.DOWNTIME,
+                            order = null
+                        )
                     )
                 ),
             )
@@ -320,7 +422,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -378,6 +480,15 @@ class TimeListServiceTest {
                         employeeShift = employeeShift,
                         actionType = TimeListActionType.BREAK,
                         isAttached = true
+                    ),
+                    makeEmployeeShiftOrderEntity(
+                        id = 3,
+                        date = date,
+                        timeStart = LocalTime.of(13, 0),
+                        timeFinish = LocalTime.of(14, 0),
+                        employeeShift = employeeShift,
+                        actionType = TimeListActionType.BREAK,
+                        isAttached = false
                     ),
                 )
             )
@@ -462,6 +573,20 @@ class TimeListServiceTest {
         return EmployeeShiftOrder(
             timeStart = LocalDateTime.of(date, timeStart),
             timeFinish = LocalDateTime.of(date, timeFinish),
+            actionType = actionType,
+            order = order,
+        )
+    }
+
+    fun makeEmployeeShiftOrder(
+        timeStart: LocalDateTime,
+        timeFinish: LocalDateTime,
+        actionType: TimeListActionType,
+        order: PassengerOrder?,
+    ): EmployeeShiftOrder {
+        return EmployeeShiftOrder(
+            timeStart = timeStart,
+            timeFinish = timeFinish,
             actionType = actionType,
             order = order,
         )
