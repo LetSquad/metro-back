@@ -31,7 +31,7 @@ class MetroTransfersService(
         .map { stationTransferMapper.entityToDomain(it) }
 
     fun calculateTransfers(request: OrderTransfersRequestDTO): OrderTransfersResponseDTO {
-        val result = calculateTransfers(request.startStationId, request.finishStationId)
+        val result = calculateTransfers(request.startStation, request.finishStation)
         return OrderTransfersResponseDTO(
             duration = result.duration,
             transfers = result.transfers.map { stationTransferMapper.domainToDto(it) }

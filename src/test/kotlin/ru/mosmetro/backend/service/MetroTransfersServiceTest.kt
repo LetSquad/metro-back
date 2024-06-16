@@ -18,8 +18,8 @@ class MetroTransfersServiceTest {
     fun testRouteWithTransfers() {
         val response: OrderTransfersResponseDTO = transfersService.calculateTransfers(
             OrderTransfersRequestDTO(
-                startStationId = AIRPORT_STATION_ID,
-                finishStationId = NAGORNAYA_STATION_ID
+                startStation = AIRPORT_STATION_ID,
+                finishStation = NAGORNAYA_STATION_ID
             )
         )
 
@@ -42,8 +42,8 @@ class MetroTransfersServiceTest {
     fun testNeighborRoute() {
         val response: OrderTransfersResponseDTO = transfersService.calculateTransfers(
             OrderTransfersRequestDTO(
-                startStationId = SOKOL_STATION_ID,
-                finishStationId = AIRPORT_STATION_ID
+                startStation = SOKOL_STATION_ID,
+                finishStation = AIRPORT_STATION_ID
             )
         )
 
@@ -58,8 +58,8 @@ class MetroTransfersServiceTest {
     fun testEmptyRoute() {
         val response: OrderTransfersResponseDTO = transfersService.calculateTransfers(
             OrderTransfersRequestDTO(
-                startStationId = AIRPORT_STATION_ID,
-                finishStationId = AIRPORT_STATION_ID
+                startStation = AIRPORT_STATION_ID,
+                finishStation = AIRPORT_STATION_ID
             )
         )
 

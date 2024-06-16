@@ -113,7 +113,7 @@ class OrderController(
     @Operation(
         summary = "Расчет маршрута по заявки"
     )
-    @PostMapping("/transfers-calculation")
+    @PostMapping("/calculation")
     fun calculateOrder(@RequestBody request: OrderTransfersRequestDTO): OrderTransfersResponseDTO {
         return transfersService.calculateTransfers(request)
     }
