@@ -45,7 +45,7 @@ class MetroTransfersService(
         return calculateTransfers(start.id!!, finish.id!!).duration
     }
 
-    private fun calculateTransfers(
+    fun calculateTransfers(
         startStationId: Long,
         finishStationId: Long
     ): OrderTransfers {

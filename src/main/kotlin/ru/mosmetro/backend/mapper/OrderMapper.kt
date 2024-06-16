@@ -18,24 +18,26 @@ import ru.mosmetro.backend.model.entity.PassengerOrderEntity
 import ru.mosmetro.backend.model.enums.OrderApplicationType
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
+import ru.mosmetro.backend.service.MetroTransfersService
 import java.time.Duration
 import java.time.Instant
 
 @Component
 class OrderMapper(
+    private val metroTransfersService: MetroTransfersService,
     private val metroStationMapper: MetroStationMapper,
     private val metroStationTransferMapper: MetroStationTransferMapper,
-    private val passengerMapper: PassengerMapper
+    private val passengerMapper: PassengerMapper,
 ) {
     fun entityToDomain(mapper: PassengerOrderEntity) = PassengerOrder(
         id = mapper.id,
-        startDescription = mapper.startDescription,
-        finishDescription = mapper.finishDescription,
+        startDescription = "Встретить в фойе метро центре станции",
+        finishDescription = "Отвезти до выхода 3, там встретят",
         orderApplication = if (mapper.orderApplication != null) OrderApplicationType.valueOf(mapper.orderApplication) else null,
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
-        additionalInfo = mapper.additionalInfo,
+        additionalInfo = "Пассажир с одним сопровождающим в черной шляпе и синем пальто",
         orderTime = mapper.orderTime,
         startTime = mapper.startTime,
         finishTime = mapper.finishTime,
@@ -47,7 +49,7 @@ class OrderMapper(
         orderStatus = OrderStatus(OrderStatusType.valueOf(mapper.orderStatusCode.code), mapper.orderStatusCode.name),
         passenger = passengerMapper.entityToDomain(mapper.passenger),
         passengerCategory = PassengerCategoryType.valueOf(mapper.passengerCategory?.code ?: mapper.passenger.category.code),
-        transfers = mapper.transfers,
+        transfers = metroTransfersService.calculateTransfers(mapper.startStation.id!!, mapper.finishStation.id!!).transfers,
         createdAt = mapper.createdAt,
         updatedAt = mapper.updatedAt,
         deletedAt = mapper.deletedAt,
