@@ -1,6 +1,9 @@
 package ru.mosmetro.backend.service
 
 import jakarta.persistence.EntityNotFoundException
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.NoSuchOrderException
 import ru.mosmetro.backend.mapper.MetroStationMapper
@@ -19,10 +22,8 @@ import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.repository.EmployeeShiftOrderEntityRepository
 import ru.mosmetro.backend.repository.OrderStatusEntityRepository
 import ru.mosmetro.backend.repository.PassengerOrderEntityRepository
+import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
 import ru.mosmetro.backend.util.jpaContext
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 @Service
 class OrderService(
@@ -30,6 +31,7 @@ class OrderService(
     private val lockService: EntityLockService,
     private val subscriptionService: EntitySubscriptionService,
     private val passengerOrderEntityRepository: PassengerOrderEntityRepository,
+    private val passengerPhoneEntityRepository: PassengerPhoneEntityRepository,
     private val orderStatusEntityRepository: OrderStatusEntityRepository,
     private val employeeShiftOrderEntityRepository: EmployeeShiftOrderEntityRepository,
     private val passengerService: PassengerService,
@@ -52,8 +54,14 @@ class OrderService(
             .atStartOfDay()
             .toInstant(ZoneOffset.UTC)
 
+        val passengerPhones = passengerPhoneEntityRepository.findAll()
+            .groupBy({ it.passenger?.id }, { it })
         val passengerOrders = jpaContext { passengerOrderEntityRepository.findAllByOrderTimeBetween(dateFrom, dateTo) }
-            .map { orderMapper.entityToDomain(it) }
+            .map {
+                val passengerPhones = passengerPhones.getOrElse(it.passenger.id) { emptyList() }
+                    .toSet()
+                orderMapper.entityToDomain(it, passengerPhones)
+            }
             .filter { o ->
                 if (r.passengerFirstName != null && o.passenger.firstName != r.passengerFirstName) {
                     return@filter false
@@ -110,10 +118,15 @@ class OrderService(
         dateStart: LocalDateTime,
         dateFinish: LocalDateTime,
     ): List<PassengerOrder> {
-        return  passengerOrderEntityRepository.findAllByOrderTimeBetween(
+        return passengerOrderEntityRepository.findAllByOrderTimeBetween(
             dateStart.toInstant(ZoneOffset.UTC),
-            dateFinish.toInstant(ZoneOffset.UTC))
-            .map { orderMapper.entityToDomain(it) }
+            dateFinish.toInstant(ZoneOffset.UTC)
+        )
+            .map {
+                val passengerPhones = passengerPhoneEntityRepository.findByPassengerId(it.passenger.id!!)
+                    .toSet()
+                orderMapper.entityToDomain(it, passengerPhones)
+            }
     }
 
     /**
@@ -127,7 +140,11 @@ class OrderService(
     suspend fun getOrderById(id: Long): EntityForEdit<PassengerOrderDTO> {
         val order: PassengerOrderDTO = jpaContext { passengerOrderEntityRepository.findById(id) }
             .orElseThrow { NoSuchOrderException(id) }
-            .let { orderMapper.entityToDomain(it) }
+            .let {
+                val passengerPhones = passengerPhoneEntityRepository.findByPassengerId(it.passenger.id!!)
+                    .toSet()
+                orderMapper.entityToDomain(it, passengerPhones)
+            }
             .let { orderMapper.domainToDto(it) }
 
         return EntityForEdit(
@@ -156,11 +173,19 @@ class OrderService(
 
         return newPassengerOrderDTO
             .let { orderMapper.dtoToDomain(it, startStation, finishStation, passenger) }
-            .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
-                metroStationMapper.domainToEntity(startStation), metroStationMapper.domainToEntity(finishStation)) }
+            .let {
+                orderMapper.domainToEntity(
+                    it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
+                    metroStationMapper.domainToEntity(startStation), metroStationMapper.domainToEntity(finishStation)
+                )
+            }
             .let { jpaContext { passengerOrderEntityRepository.save(it) } }
             .also { subscriptionService.notifyOrderUpdate() }
-            .let { orderMapper.entityToDomain(it) }
+            .let {
+                val passengerPhones = passengerPhoneEntityRepository.findByPassengerId(it.passenger.id!!)
+                    .toSet()
+                orderMapper.entityToDomain(it, passengerPhones)
+            }
             .let { orderMapper.domainToDto(it) }
     }
 
@@ -189,12 +214,29 @@ class OrderService(
             .let { metroStationMapper.dtoToDomain(it) }
 
         return updatedPassengerOrderDTO
-            .let { orderMapper.dtoToDomain(it, passengerOrderEntity.createdAt, id, startStation, finishStation, passenger) }
-            .let { orderMapper.domainToEntity(it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
-                metroStationMapper.domainToEntity(startStation), metroStationMapper.domainToEntity(finishStation)) }
+            .let {
+                orderMapper.dtoToDomain(
+                    it,
+                    passengerOrderEntity.createdAt,
+                    id,
+                    startStation,
+                    finishStation,
+                    passenger
+                )
+            }
+            .let {
+                orderMapper.domainToEntity(
+                    it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
+                    metroStationMapper.domainToEntity(startStation), metroStationMapper.domainToEntity(finishStation)
+                )
+            }
             .let { jpaContext { passengerOrderEntityRepository.save(it) } }
             .also { subscriptionService.notifyOrderUpdate() }
-            .let { orderMapper.entityToDomain(it) }
+            .let {
+                val passengerPhones = passengerPhoneEntityRepository.findByPassengerId(it.passenger.id!!)
+                    .toSet()
+                orderMapper.entityToDomain(it, passengerPhones)
+            }
             .let { orderMapper.domainToDto(it) }
     }
 
@@ -238,7 +280,11 @@ class OrderService(
             }
             .let { jpaContext { passengerOrderEntityRepository.save(it) } }
             .also { subscriptionService.notifyOrderUpdate() }
-            .let { orderMapper.entityToDomain(it) }
+            .let {
+                val passengerPhones = passengerPhoneEntityRepository.findByPassengerId(it.passenger.id!!)
+                    .toSet()
+                orderMapper.entityToDomain(it, passengerPhones)
+            }
             .let { orderMapper.domainToDto(it) }
     }
 }

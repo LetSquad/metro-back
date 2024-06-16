@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
+import ru.mosmetro.backend.model.dto.employee.CurrentEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
@@ -49,7 +50,7 @@ class EmployeeController(
         summary = "Получение профиля текущего сотрудника"
     )
     @GetMapping("profile")
-    suspend fun getCurrentEmployee(): EmployeeDTO {
+    suspend fun getCurrentEmployee(): CurrentEmployeeDTO {
         return employeeService.getCurrentEmployee()
     }
 

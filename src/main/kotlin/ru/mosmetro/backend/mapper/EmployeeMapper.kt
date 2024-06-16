@@ -4,6 +4,7 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Employee
+import ru.mosmetro.backend.model.dto.employee.CurrentEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
@@ -47,8 +48,25 @@ class EmployeeMapper(
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRankMapper.domainToDto(mapper.rank),
+        employeeRole = employeeRankMapper.domainToDto(mapper.rank).role
+    )
+
+    fun domainToCurrentDto(mapper: Employee) = CurrentEmployeeDTO(
+        id = mapper.id,
+        firstName = mapper.firstName,
+        lastName = mapper.lastName,
+        middleName = mapper.middleName,
+        sex = mapper.sex,
+        shift = mapper.workStart.truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.truncatedTo(
+            ChronoUnit.MINUTES
+        ).toString(),
+        workPhone = mapper.workPhone,
+        personalPhone = mapper.personalPhone,
+        employeeNumber = mapper.employeeNumber,
+        lightDuties = mapper.lightDuties,
+        rank = employeeRankMapper.domainToDto(mapper.rank),
         employeeRole = employeeRankMapper.domainToDto(mapper.rank).role,
-        login = mapper.workPhone
+        login = mapper.login
     )
 
     fun dtoToDomain(mapper: NewEmployeeDTO, employeeRankDTO: EmployeeRankDTO) = Employee(

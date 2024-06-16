@@ -10,12 +10,12 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.time.Duration
+import java.time.Instant
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import ru.mosmetro.backend.model.domain.MetroStationTransfer
 import ru.mosmetro.backend.model.domain.OrderBaggage
-import java.time.Duration
-import java.time.Instant
 
 @Entity
 @Table(name = "passenger_order")
@@ -27,10 +27,10 @@ data class PassengerOrderEntity(
     val id: Long?,
 
     @Column(name = "start_description", length = Integer.MAX_VALUE)
-    val startDescription: String?,
+    var startDescription: String?,
 
     @Column(name = "finish_description", length = Integer.MAX_VALUE)
-    val finishDescription: String?,
+    var finishDescription: String?,
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "transfers")
@@ -47,10 +47,10 @@ data class PassengerOrderEntity(
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "baggage")
-    val baggage: OrderBaggage?,
+    var baggage: OrderBaggage?,
 
     @Column(name = "additional_info", length = Integer.MAX_VALUE)
-    val additionalInfo: String?,
+    var additionalInfo: String?,
 
     @Column(name = "order_time")
     val orderTime: Instant,

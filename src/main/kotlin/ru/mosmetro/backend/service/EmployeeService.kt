@@ -11,6 +11,7 @@ import ru.mosmetro.backend.mapper.EmployeeRankMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftMapper
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
+import ru.mosmetro.backend.model.dto.employee.CurrentEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
@@ -60,7 +61,7 @@ class EmployeeService(
      * @return EmployeeDTO в которых предоставлена информация о текущем рабочем
      *
      * */
-    suspend fun getCurrentEmployee(): EmployeeDTO {
+    suspend fun getCurrentEmployee(): CurrentEmployeeDTO {
         val login: String = ReactiveSecurityContextHolder.getContext()
             .awaitSingle()
             .authentication
@@ -68,7 +69,7 @@ class EmployeeService(
 
         return jpaContext { employeeEntityRepository.findByUserLogin(login) }
             .let { employeeMapper.entityToDomain(it) }
-            .let { employeeMapper.domainToDto(it) }
+            .let { employeeMapper.domainToCurrentDto(it) }
     }
 
     /**

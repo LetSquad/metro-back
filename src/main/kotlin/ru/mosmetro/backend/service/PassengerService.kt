@@ -32,8 +32,14 @@ class PassengerService(
      *
      * */
     suspend fun getPassengers(): ListWithTotal<PassengerDTO> {
+        val passengerPhones = passengerPhoneEntityRepository.findAll()
+            .groupBy({ it.passenger?.id }, { it })
         val passengerDTOList = jpaContext { passengerEntityRepository.findAll() }
-            .map { passengerMapper.entityToDomain(it) }
+            .map {
+                val passengerPhones = passengerPhones.getOrElse(it.id) { emptyList() }
+                    .toSet()
+                passengerMapper.entityToDomain(it, passengerPhones)
+            }
             .map { passengerMapper.domainToDto(it) }
         return ListWithTotal(passengerDTOList.size, passengerDTOList)
     }
@@ -63,7 +69,11 @@ class PassengerService(
             .orElseThrow {
                 NoSuchPassengerException(id)
             }
-            .let { passengerMapper.entityToDomain(it) }
+            .let {
+                val passengerPhone = passengerPhoneEntityRepository.findByPassengerId(it.id!!)
+                    .toSet()
+                passengerMapper.entityToDomain(it, passengerPhone)
+            }
             .let { passengerMapper.domainToDto(it) }
 
         return EntityForEdit(
@@ -91,7 +101,7 @@ class PassengerService(
             .let { passengerMapper.domainToEntity(it) }
             .let { jpaContext { passengerEntityRepository.save(it) } }
             .also { subscriptionService.notifyPassengerUpdate() }
-            .let { passengerMapper.entityToDomain(it) }
+            .let { passengerMapper.entityToDomain(it, emptySet()) }
             .let { passengerMapper.domainToDto(it) }
     }
 
@@ -112,7 +122,7 @@ class PassengerService(
             .let { passengerMapper.domainToEntity(it) }
             .let { passengerEntityRepository.save(it) }
             .also { subscriptionService.notifyPassengerUpdate() }
-            .let { passengerMapper.entityToDomain(it) }
+            .let { passengerMapper.entityToDomain(it, emptySet()) }
             .let { passengerMapper.domainToDto(it) }
     }
 

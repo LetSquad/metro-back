@@ -1,24 +1,26 @@
 package ru.mosmetro.backend.mapper
 
+import java.time.LocalDateTime
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.EmployeeShiftOrder
 import ru.mosmetro.backend.model.dto.order.EmployeeShiftOrderDTO
 import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
+import ru.mosmetro.backend.model.entity.PassengerPhoneEntity
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_MOSCOW
 import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_UTC
-import java.time.LocalDateTime
 
 @Component
 class EmployeeShiftOrderMapper(
     private val orderMapper: OrderMapper,
     private val passangerOrderMapper: OrderMapper,
 ) {
-    fun entityToDomain(mapper: EmployeeShiftOrderEntity) = EmployeeShiftOrder(
+    fun entityToDomain(mapper: EmployeeShiftOrderEntity, passengerPhones: Set<PassengerPhoneEntity>) =
+        EmployeeShiftOrder(
             timeStart = LocalDateTime.ofInstant(mapper.timeStart, TIME_ZONE_UTC),
             timeFinish = LocalDateTime.ofInstant(mapper.timeFinish, TIME_ZONE_UTC),
             actionType = TimeListActionType.valueOf(mapper.actionType),
-            order = mapper.order?.let { passangerOrderMapper.entityToDomain(it) }
+            order = mapper.order?.let { passangerOrderMapper.entityToDomain(it, passengerPhones) }
     )
 
     fun domainToDto(mapper: EmployeeShiftOrder) = EmployeeShiftOrderDTO(

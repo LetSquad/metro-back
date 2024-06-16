@@ -1,19 +1,23 @@
 package ru.mosmetro.backend.mapper
 
+import java.time.Instant
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Passenger
+import ru.mosmetro.backend.model.domain.PassengerPhone
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerPhoneDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
 import ru.mosmetro.backend.model.entity.PassengerEntity
+import ru.mosmetro.backend.model.entity.PassengerPhoneEntity
 import ru.mosmetro.backend.model.enums.SexType
-import java.time.Instant
 
 @Component
-class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapper) {
+class PassengerMapper(
+    private val passengerCategoryMapper: PassengerCategoryMapper,
+) {
 
-    fun entityToDomain(mapper: PassengerEntity) = Passenger(
+    fun entityToDomain(mapper: PassengerEntity, passengerPhoneEntity: Set<PassengerPhoneEntity>) = Passenger(
         id = mapper.id,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
@@ -23,7 +27,10 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
         hasPacemaker = mapper.hasPacemaker,
         createdAt = mapper.createdAt,
         deletedAt = mapper.deletedAt,
-        category = passengerCategoryMapper.entityToDomain(mapper.category)
+        category = passengerCategoryMapper.entityToDomain(mapper.category),
+        phones = passengerPhoneEntity.map {
+            PassengerPhone(it.phoneNumber, it.description)
+        }.toSet()
     )
 
     fun dtoToDomain(mapper: NewPassengerDTO) = Passenger(
@@ -36,7 +43,8 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
         hasPacemaker = mapper.hasPacemaker,
         createdAt = Instant.now(),
         deletedAt = null,
-        category = passengerCategoryMapper.dtoToDomain(mapper.category)
+        category = passengerCategoryMapper.dtoToDomain(mapper.category),
+        phones = emptySet()
     )
 
     fun dtoToDomain(mapper: PassengerDTO) = Passenger(
@@ -49,7 +57,11 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
         hasPacemaker = mapper.hasPacemaker,
         createdAt = Instant.now(),
         deletedAt = null,
-        category = passengerCategoryMapper.dtoToDomain(mapper.category)
+        category = passengerCategoryMapper.dtoToDomain(mapper.category),
+        phones = mapper.phones
+            .map {
+                PassengerPhone(it.phone, it.description)
+            }.toSet()
     )
 
     fun dtoToDomain(mapper: UpdatePassengerDTO, id: Long, createdAt: Instant) = Passenger(
@@ -62,7 +74,8 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
         hasPacemaker = mapper.hasPacemaker,
         createdAt = createdAt,
         deletedAt = mapper.deletedAt,
-        category = passengerCategoryMapper.dtoToDomain(mapper.category)
+        category = passengerCategoryMapper.dtoToDomain(mapper.category),
+        phones = emptySet()
     )
 
     fun domainToEntity(mapper: Passenger) = PassengerEntity(
@@ -87,11 +100,9 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
         comment = mapper.comment,
         hasPacemaker = mapper.hasPacemaker,
         category = passengerCategoryMapper.domainToDto(mapper.category),
-        // TODO dirty hack
-        phones = setOf(
-            PassengerPhoneDTO("79099321234", "Телефон личный"),
-            PassengerPhoneDTO("79099321234", "Телефон рабочий"),
-            PassengerPhoneDTO("79099321234", "Телефон сопровождающего")
-        )
+        phones = mapper.phones
+            .map {
+                PassengerPhoneDTO(it.phone, it.description)
+            }.toSet()
     )
 }

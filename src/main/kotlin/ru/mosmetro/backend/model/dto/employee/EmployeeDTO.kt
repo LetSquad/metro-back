@@ -29,7 +29,5 @@ data class EmployeeDTO(
         @Schema(description = "Флаг легких работ")
         val lightDuties: Boolean,
         @Schema(description = "Должность")
-        val rank: EmployeeRankDTO,
-        @Schema(description = "Логин пользователя")
-        val login: String?,
+        val rank: EmployeeRankDTO
 )

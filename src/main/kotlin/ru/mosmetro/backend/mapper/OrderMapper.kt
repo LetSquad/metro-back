@@ -1,5 +1,7 @@
 package ru.mosmetro.backend.mapper
 
+import java.time.Duration
+import java.time.Instant
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.MetroStation
 import ru.mosmetro.backend.model.domain.OrderBaggage
@@ -15,12 +17,11 @@ import ru.mosmetro.backend.model.entity.MetroStationEntity
 import ru.mosmetro.backend.model.entity.OrderStatusEntity
 import ru.mosmetro.backend.model.entity.PassengerEntity
 import ru.mosmetro.backend.model.entity.PassengerOrderEntity
+import ru.mosmetro.backend.model.entity.PassengerPhoneEntity
 import ru.mosmetro.backend.model.enums.OrderApplicationType
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.service.MetroTransfersService
-import java.time.Duration
-import java.time.Instant
 
 @Component
 class OrderMapper(
@@ -29,29 +30,25 @@ class OrderMapper(
     private val metroStationTransferMapper: MetroStationTransferMapper,
     private val passengerMapper: PassengerMapper,
 ) {
-    fun entityToDomain(mapper: PassengerOrderEntity) = PassengerOrder(
+    fun entityToDomain(mapper: PassengerOrderEntity, passengerPhone: Set<PassengerPhoneEntity>) = PassengerOrder(
         id = mapper.id,
-        // TODO dirty hack
         startDescription = "Встретить в фойе метро центре станции",
-        // TODO dirty hack
         finishDescription = "Отвезти до выхода 3, там встретят",
         orderApplication = if (mapper.orderApplication != null) OrderApplicationType.valueOf(mapper.orderApplication) else null,
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
-        // TODO dirty hack
         additionalInfo = "Пассажир с одним сопровождающим в черной шляпе и синем пальто",
         orderTime = mapper.orderTime,
         startTime = mapper.startTime,
         finishTime = mapper.finishTime,
         absenceTime = mapper.absenceTime,
         cancelTime = mapper.cancelTime,
-        // TODO dirty hack
         baggage = OrderBaggage("Чемодан и авоська", 4, false),
         startStation = metroStationMapper.entityToDomain(mapper.startStation),
         finishStation = metroStationMapper.entityToDomain(mapper.finishStation),
         orderStatus = OrderStatus(OrderStatusType.valueOf(mapper.orderStatusCode.code), mapper.orderStatusCode.name),
-        passenger = passengerMapper.entityToDomain(mapper.passenger),
+        passenger = passengerMapper.entityToDomain(mapper.passenger, passengerPhone),
         passengerCategory = PassengerCategoryType.valueOf(mapper.passengerCategory?.code ?: mapper.passenger.category.code),
         transfers = metroTransfersService.calculateTransfers(mapper.startStation.id!!, mapper.finishStation.id!!).transfers,
         createdAt = mapper.createdAt,
