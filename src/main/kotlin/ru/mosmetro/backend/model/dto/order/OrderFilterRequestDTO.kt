@@ -1,10 +1,10 @@
 package ru.mosmetro.backend.model.dto.order
 
-import java.time.ZonedDateTime
+import java.time.LocalDate
 
 data class OrderFilterRequestDTO(
-    val dateFrom: ZonedDateTime,
-    val dateTo: ZonedDateTime,
+    val dateFrom: LocalDate,
+    val dateTo: LocalDate,
 
     val passengerFirstName: String?,
     val passengerLastName: String?,

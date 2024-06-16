@@ -58,6 +58,8 @@ class MetroTransfersService(
         for (transfer in allTransfers) {
             graph.addEdge(transfer.startStation.id, transfer.finishStation.id)
                 ?.let { graph.setEdgeWeight(it, transfer.duration.toSeconds().toDouble()) }
+            graph.addEdge(transfer.finishStation.id, transfer.startStation.id)
+                ?.let { graph.setEdgeWeight(it, transfer.duration.toSeconds().toDouble()) }
         }
 
         val pathfinder = DijkstraShortestPath(graph)
@@ -109,7 +111,7 @@ class MetroTransfersService(
                     resultPath.add(
                         MetroStationTransfer(
                             startStation = startStation,
-                            finishStation = nextStation,
+                            finishStation = currentStation,
                             duration = Duration.ofSeconds(transferDuration + duration),
                             isCrosswalking = false
                         )

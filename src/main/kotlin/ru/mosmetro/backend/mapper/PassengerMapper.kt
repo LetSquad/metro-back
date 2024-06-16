@@ -1,13 +1,14 @@
 package ru.mosmetro.backend.mapper
 
-import java.time.Instant
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Passenger
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
+import ru.mosmetro.backend.model.dto.passenger.PassengerPhoneDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
 import ru.mosmetro.backend.model.entity.PassengerEntity
 import ru.mosmetro.backend.model.enums.SexType
+import java.time.Instant
 
 @Component
 class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapper) {
@@ -86,6 +87,11 @@ class PassengerMapper(private val passengerCategoryMapper: PassengerCategoryMapp
         comment = mapper.comment,
         hasPacemaker = mapper.hasPacemaker,
         category = passengerCategoryMapper.domainToDto(mapper.category),
-        phones = emptySet() //TODO: fill phones
+        // TODO dirty hack
+        phones = setOf(
+            PassengerPhoneDTO("79099321234", "Телефон личный"),
+            PassengerPhoneDTO("79099321234", "Телефон рабочий"),
+            PassengerPhoneDTO("79099321234", "Телефон сопровождающего")
+        )
     )
 }

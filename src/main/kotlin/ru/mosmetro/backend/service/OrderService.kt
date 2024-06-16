@@ -44,10 +44,10 @@ class OrderService(
      *
      * */
     suspend fun getOrders(r: OrderFilterRequestDTO): ListWithTotal<PassengerOrderDTO> {
-        val dateFrom: Instant = r.dateFrom.toLocalDate()
+        val dateFrom: Instant = r.dateFrom
             .atStartOfDay()
             .toInstant(ZoneOffset.UTC)
-        val dateTo: Instant = r.dateTo.toLocalDate()
+        val dateTo: Instant = r.dateTo
             .plusDays(1)
             .atStartOfDay()
             .toInstant(ZoneOffset.UTC)

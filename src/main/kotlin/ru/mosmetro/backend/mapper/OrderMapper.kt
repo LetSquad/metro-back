@@ -31,19 +31,23 @@ class OrderMapper(
 ) {
     fun entityToDomain(mapper: PassengerOrderEntity) = PassengerOrder(
         id = mapper.id,
+        // TODO dirty hack
         startDescription = "Встретить в фойе метро центре станции",
+        // TODO dirty hack
         finishDescription = "Отвезти до выхода 3, там встретят",
         orderApplication = if (mapper.orderApplication != null) OrderApplicationType.valueOf(mapper.orderApplication) else null,
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
+        // TODO dirty hack
         additionalInfo = "Пассажир с одним сопровождающим в черной шляпе и синем пальто",
         orderTime = mapper.orderTime,
         startTime = mapper.startTime,
         finishTime = mapper.finishTime,
         absenceTime = mapper.absenceTime,
         cancelTime = mapper.cancelTime,
-        baggage = mapper.baggage,
+        // TODO dirty hack
+        baggage = OrderBaggage("Чемодан и авоська", 4, false),
         startStation = metroStationMapper.entityToDomain(mapper.startStation),
         finishStation = metroStationMapper.entityToDomain(mapper.finishStation),
         orderStatus = OrderStatus(OrderStatusType.valueOf(mapper.orderStatusCode.code), mapper.orderStatusCode.name),
@@ -67,11 +71,12 @@ class OrderMapper(
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
         additionalInfo = mapper.additionalInfo,
-        orderTime = mapper.orderTime,
-        startTime = mapper.startTime,
-        finishTime = mapper.finishTime,
-        absenceTime = mapper.absenceTime,
-        cancelTime = mapper.cancelTime,
+        // TODO dirty hack
+        orderTime = mapper.orderTime.minusSeconds(60*60*3),
+        startTime = mapper.startTime?.minusSeconds(60*60*3),
+        finishTime = mapper.finishTime?.minusSeconds(60*60*3),
+        absenceTime = mapper.absenceTime?.minusSeconds(60*60*3),
+        cancelTime = mapper.cancelTime?.minusSeconds(60*60*3),
         baggage = if (mapper.baggage != null) {
             OrderBaggageDTO(
                 mapper.baggage.type,

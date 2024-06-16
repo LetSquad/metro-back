@@ -21,5 +21,5 @@ data class PassengerDTO(
     @Schema(description = "Категория пассажира")
     val category: PassengerCategoryDTO,
     @Schema(description = "Телефоны пассажира")
-    val phones: Set<String>
+    val phones: Set<PassengerPhoneDTO>
 )
