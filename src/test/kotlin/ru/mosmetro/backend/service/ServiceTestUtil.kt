@@ -27,10 +27,6 @@ import java.time.ZoneOffset
 
 object ServiceTestUtil {
 
-    val METRO_WORK_TIME_START = LocalTime.of(5, 30)
-    val METRO_WORK_TIME_FINISH = LocalTime.of(1, 0)
-    val TIME_ZONE_UTC = ZoneId.of("UTC")
-
     fun makeOrderTime(
         employee: Employee,
         plan: List<EmployeeShiftOrder>

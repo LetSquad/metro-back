@@ -5,9 +5,9 @@ import ru.mosmetro.backend.model.domain.EmployeeShiftOrder
 import ru.mosmetro.backend.model.dto.order.EmployeeShiftOrderDTO
 import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
 import ru.mosmetro.backend.model.enums.TimeListActionType
+import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_MOSCOW
+import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_UTC
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
 
 @Component
 class EmployeeShiftOrderMapper(
@@ -22,14 +22,10 @@ class EmployeeShiftOrderMapper(
     )
 
     fun domainToDto(mapper: EmployeeShiftOrder) = EmployeeShiftOrderDTO(
-            timeStart = mapper.timeStart.toInstant(TIME_ZONE_UTC3),
-            timeEnd = mapper.timeFinish.toInstant(TIME_ZONE_UTC3),
+            timeStart = mapper.timeStart.toInstant(TIME_ZONE_MOSCOW),
+            timeEnd = mapper.timeFinish.toInstant(TIME_ZONE_MOSCOW),
             actionType = mapper.actionType,
             order = mapper.order?.let { orderMapper.domainToDto(it) }
     )
 
-    companion object {
-        private val TIME_ZONE_UTC3 = ZoneOffset.of("+03:00")
-        private val TIME_ZONE_UTC = ZoneId.of("UTC")
-    }
 }

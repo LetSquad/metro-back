@@ -50,7 +50,7 @@ class SecurityConfig(
             }
             .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 
-        if (metroSecurityProperties.corsEnables || serverProperties.ssl?.isEnabled != true) {
+        if (metroSecurityProperties.corsEnables) {
             config.cors { it.configurationSource(createLocalUrlBasedCorsConfigurationSource()) }
         }
 

@@ -12,10 +12,12 @@ import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftOrderEntityRepository
+import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_FINISH
+import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_START
+import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_UTC
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
 
 @Service
 class TimeListService(
@@ -212,9 +214,4 @@ class TimeListService(
         return result
     }
 
-    companion object {
-        private val METRO_TIME_START = LocalTime.of(5, 30)
-        private val METRO_TIME_FINISH = LocalTime.of(1, 0)
-        private val TIME_ZONE_UTC = ZoneId.of("UTC")
-    }
 }
