@@ -4,11 +4,13 @@ import java.time.Duration
 import java.time.Instant
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.MetroStation
+import ru.mosmetro.backend.model.domain.OrderApplication
 import ru.mosmetro.backend.model.domain.OrderBaggage
 import ru.mosmetro.backend.model.domain.OrderStatus
 import ru.mosmetro.backend.model.domain.Passenger
 import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
+import ru.mosmetro.backend.model.dto.order.OrderApplicationDTO
 import ru.mosmetro.backend.model.dto.order.OrderBaggageDTO
 import ru.mosmetro.backend.model.dto.order.OrderStatusDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
@@ -32,25 +34,33 @@ class OrderMapper(
 ) {
     fun entityToDomain(mapper: PassengerOrderEntity, passengerPhone: Set<PassengerPhoneEntity>) = PassengerOrder(
         id = mapper.id,
-        startDescription = "Встретить в фойе метро центре станции",
-        finishDescription = "Отвезти до выхода 3, там встретят",
-        orderApplication = if (mapper.orderApplication != null) OrderApplicationType.valueOf(mapper.orderApplication) else null,
+        startDescription = mapper.startDescription,
+        finishDescription = mapper.finishDescription,
+        orderApplication = OrderApplication(
+            OrderApplicationType.valueOf(mapper.orderApplication),
+            OrderApplicationType.valueOf(mapper.orderApplication).label
+        ),
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
-        additionalInfo = "Пассажир с одним сопровождающим в черной шляпе и синем пальто",
+        additionalInfo = mapper.additionalInfo,
         orderTime = mapper.orderTime,
         startTime = mapper.startTime,
         finishTime = mapper.finishTime,
         absenceTime = mapper.absenceTime,
         cancelTime = mapper.cancelTime,
-        baggage = OrderBaggage("Чемодан и авоська", 4, false),
+        baggage = mapper.baggage,
         startStation = metroStationMapper.entityToDomain(mapper.startStation),
         finishStation = metroStationMapper.entityToDomain(mapper.finishStation),
         orderStatus = OrderStatus(OrderStatusType.valueOf(mapper.orderStatusCode.code), mapper.orderStatusCode.name),
         passenger = passengerMapper.entityToDomain(mapper.passenger, passengerPhone),
-        passengerCategory = PassengerCategoryType.valueOf(mapper.passengerCategory?.code ?: mapper.passenger.category.code),
-        transfers = metroTransfersService.calculateTransfers(mapper.startStation.id!!, mapper.finishStation.id!!).transfers,
+        passengerCategory = PassengerCategoryType.valueOf(
+            mapper.passengerCategory?.code ?: mapper.passenger.category.code
+        ),
+        transfers = metroTransfersService.calculateTransfers(
+            mapper.startStation.id!!,
+            mapper.finishStation.id!!
+        ).transfers,
         createdAt = mapper.createdAt,
         updatedAt = mapper.updatedAt,
         deletedAt = mapper.deletedAt,
@@ -63,17 +73,17 @@ class OrderMapper(
         id = mapper.id,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
-        orderApplication = mapper.orderApplication,
+        orderApplication = OrderApplicationDTO(mapper.orderApplication.code, mapper.orderApplication.code.label),
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
         additionalInfo = mapper.additionalInfo,
         // TODO dirty hack
-        orderTime = mapper.orderTime.minusSeconds(60*60*3),
-        startTime = mapper.startTime?.minusSeconds(60*60*3),
-        finishTime = mapper.finishTime?.minusSeconds(60*60*3),
-        absenceTime = mapper.absenceTime?.minusSeconds(60*60*3),
-        cancelTime = mapper.cancelTime?.minusSeconds(60*60*3),
+        orderTime = mapper.orderTime.minusSeconds(60 * 60 * 3),
+        startTime = mapper.startTime?.minusSeconds(60 * 60 * 3),
+        finishTime = mapper.finishTime?.minusSeconds(60 * 60 * 3),
+        absenceTime = mapper.absenceTime?.minusSeconds(60 * 60 * 3),
+        cancelTime = mapper.cancelTime?.minusSeconds(60 * 60 * 3),
         baggage = if (mapper.baggage != null) {
             OrderBaggageDTO(
                 mapper.baggage.type,
@@ -92,11 +102,20 @@ class OrderMapper(
         employees = emptySet()
     )
 
-    fun dtoToDomain(mapper: NewPassengerOrderDTO, startStation: MetroStation, finishStation: MetroStation, passenger: Passenger) = PassengerOrder(
+    fun dtoToDomain(
+        mapper: NewPassengerOrderDTO,
+        startStation: MetroStation,
+        finishStation: MetroStation,
+        passenger: Passenger
+    ) = PassengerOrder(
         id = null,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
-        orderApplication = mapper.orderApplication,
+        //TODO dirty hack
+        orderApplication = OrderApplication(
+            OrderApplicationType.ELECTRONIC_SERVICES,
+            OrderApplicationType.ELECTRONIC_SERVICES.name
+        ),
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
@@ -128,12 +147,14 @@ class OrderMapper(
         employees = emptySet()
     )
 
-    fun dtoToDomain(mapper: UpdatedPassengerOrderDTO, createdAt: Instant, id: Long,
-                    startStation: MetroStation, finishStation: MetroStation, passenger: Passenger) = PassengerOrder(
+    fun dtoToDomain(
+        mapper: UpdatedPassengerOrderDTO, createdAt: Instant, id: Long,
+        startStation: MetroStation, finishStation: MetroStation, passenger: Passenger
+    ) = PassengerOrder(
         id = id,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
-        orderApplication = mapper.orderApplication,
+        orderApplication = OrderApplication(OrderApplicationType.ELECTRONIC_SERVICES, "Электронные сервисы"),
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
@@ -192,6 +213,6 @@ class OrderMapper(
         passengerCategory = passengerEntity.category,
         transfers = mapper.transfers,
         duration = mapper.duration,
-        orderApplication = if (mapper.orderApplication != null) mapper.orderApplication.name else null,
+        orderApplication = mapper.orderApplication.name,
     )
 }

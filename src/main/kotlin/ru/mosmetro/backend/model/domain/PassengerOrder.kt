@@ -1,15 +1,14 @@
 package ru.mosmetro.backend.model.domain
 
-import ru.mosmetro.backend.model.enums.OrderApplicationType
-import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import java.time.Duration
 import java.time.Instant
+import ru.mosmetro.backend.model.enums.PassengerCategoryType
 
 data class PassengerOrder(
     val id: Long?,
     val startDescription: String?,
     val finishDescription: String?,
-    val orderApplication: OrderApplicationType?,
+    val orderApplication: OrderApplication,
     val passengerCount: Int,
     val maleEmployeeCount: Int,
     val femaleEmployeeCount: Int,
