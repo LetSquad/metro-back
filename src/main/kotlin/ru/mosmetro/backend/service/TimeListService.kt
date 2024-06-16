@@ -6,6 +6,7 @@ import ru.mosmetro.backend.mapper.EmployeeShiftMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftOrderMapper
 import ru.mosmetro.backend.model.domain.EmployeeShiftOrder
 import ru.mosmetro.backend.model.domain.OrderTime
+import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.enums.TimeListActionType
@@ -42,6 +43,31 @@ class TimeListService(
 
     fun getOrderTimeListWithAllTime(
         timePlanDate: LocalDate
+    ): ListWithTotal<OrderTimeDTO> {
+        val instantDate = timePlanDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
+
+        val result: List<OrderTimeDTO> =
+            employeeShiftEntityRepository.findAllByShiftDate(instantDate)
+                .map { employeeShiftMapper.entityToDomain(it) }
+                .map { employeeShift ->
+                    val actionOrderTimeList =
+                        employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!)
+                            .filter { it.isAttached }
+                            .map { employeeShiftOrderMapper.entityToDomain(it) }
+                    val actionNonWorkingTimeList = addNonWorkingTime(actionOrderTimeList, employeeShift.workStart, employeeShift.workFinish, timePlanDate)
+                    val actionDownTimeList = addDownTimeTime(actionNonWorkingTimeList,  employeeShift.workStart, employeeShift.workFinish, timePlanDate)
+
+                    OrderTimeDTO(
+                        employee = employeeShift.employee.let { employeeMapper.domainToDto(it) },
+                        actions = actionDownTimeList.map { employeeShiftOrderMapper.domainToDto(it) }.sortedBy { it.timeStart }
+                    )
+                }
+
+        return ListWithTotal(result.size, result)
+    }
+
+    fun getOrderTimeListWithAllTimeForTest(
+        timePlanDate: LocalDate
     ): OrderTimeListDTO {
         val instantDate = timePlanDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
@@ -58,7 +84,7 @@ class TimeListService(
 
                     OrderTimeDTO(
                         employee = employeeShift.employee.let { employeeMapper.domainToDto(it) },
-                        actions = actionDownTimeList.map { employeeShiftOrderMapper.domainToDto(it) }
+                        actions = actionDownTimeList.map { employeeShiftOrderMapper.domainToDto(it) }.sortedBy { it.timeStart }
                     )
                 }
 
@@ -105,14 +131,6 @@ class TimeListService(
                     order = null
                 )
             )
-            result.add(
-                EmployeeShiftOrder(
-                    timeStart = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
-                    timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_START),
-                    actionType = TimeListActionType.METRO_NOT_WORKING,
-                    order = null
-                )
-            )
         } else {
             result.add(
                 EmployeeShiftOrder(
@@ -144,7 +162,7 @@ class TimeListService(
         date: LocalDate
     ): List<EmployeeShiftOrder> {
         val result: MutableList<EmployeeShiftOrder> = mutableListOf()
-        val endWork = if (workStart > workFinish) LocalDateTime.of(date.plusDays(1), workFinish) else LocalDateTime.of(date, workFinish)
+        val endWork = if (workStart > workFinish) LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH) else LocalDateTime.of(date, workFinish)
         actions
             .sortedBy { it.timeStart }
             .let {

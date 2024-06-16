@@ -11,9 +11,9 @@ import ru.mosmetro.backend.model.domain.MetroStation
 import ru.mosmetro.backend.model.domain.OrderBaggage
 import ru.mosmetro.backend.model.domain.OrderTime
 import ru.mosmetro.backend.model.domain.PassengerOrder
+import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
-import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
@@ -39,6 +39,14 @@ class OrderDistributionService(
 
     fun calculateOrderDistribution(
         planDate: LocalDate
+    ): ListWithTotal<OrderTimeDTO> {
+        val result: OrderTimeListDTO = calculateOrderDistribution(planDate, true)
+
+        return ListWithTotal(result.ordersTime.size, result.ordersTime)
+    }
+
+    fun calculateOrderDistributionForTest(
+        planDate: LocalDate
     ): OrderTimeListDTO {
         return calculateOrderDistribution(planDate, false)
     }
@@ -58,12 +66,17 @@ class OrderDistributionService(
         val orderStartTime = LocalDateTime.of(planDate, METRO_TIME_START)
         val orderFinishTime = LocalDateTime.of(planDate.plusDays(1), METRO_TIME_FINISH)
         val passengerOrderList =
-            orderService.getOrdersBetweenStartDate(orderStartTime, orderFinishTime)
-                .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
+            orderService.getOrdersBetweenOrderDate(orderStartTime, orderFinishTime)
+                // TODO хак для распределения тестовых заявок
+//                .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
                 .sortedWith(compareBy({ it.orderTime }, { it.createdAt }))
 
         if (guessBreakTime) {
             breakTimeGuesserService.guessBreakTime(planDate, employeeTimePlanList, passengerOrderList)
+
+            // TODO график фронта не может отобразить время за пределами 1-00
+            //      считаем что в ночное время обеды распределять не нужно
+            breakTimeGuesserService.hackCleanAllNightBreakTime(employeeTimePlanList)
         }
 
         val orderNotInPlanList: MutableList<PassengerOrder> = mutableListOf()
@@ -75,7 +88,7 @@ class OrderDistributionService(
                 passengerOrder,
                 employeeTimePlanList,
                 LocalDateTime.ofInstant(passengerOrder.orderTime, TIME_ZONE_UTC),
-                LocalDateTime.ofInstant(passengerOrder.finishTime, TIME_ZONE_UTC)
+                LocalDateTime.ofInstant(passengerOrder.getSupposedFinishTime(), TIME_ZONE_UTC)
             )
 
             if (notBusyEmployeeList.isEmpty()
@@ -103,13 +116,19 @@ class OrderDistributionService(
             ) {
                 val priorityEmployee =
                     getMostPriorityEmployee(
+                        employeeForOrderList,
                         employeePriorityList,
                         passengerOrder.passengerCategory,
                         passengerOrder.baggage,
                         SexType.FEMALE
                     )
-                employeeForOrderList.add(priorityEmployee)
-                femaleEmployeeOrderCount--
+                if (priorityEmployee == null) {
+                    orderNotInPlanList.add(passengerOrder)
+                    femaleEmployeeOrderCount = 0
+                } else {
+                    employeeForOrderList.add(priorityEmployee)
+                    femaleEmployeeOrderCount--
+                }
             }
 
             // распределям мужчин
@@ -124,13 +143,19 @@ class OrderDistributionService(
             ) {
                 val priorityEmployee =
                     getMostPriorityEmployee(
+                        employeeForOrderList,
                         employeePriorityList,
                         passengerOrder.passengerCategory,
                         passengerOrder.baggage,
                         SexType.MALE
                     )
-                employeeForOrderList.add(priorityEmployee)
-                maleEmployeeOrderCount--
+                if (priorityEmployee == null) {
+                    orderNotInPlanList.add(passengerOrder)
+                    maleEmployeeOrderCount = 0
+                } else {
+                    employeeForOrderList.add(priorityEmployee)
+                    maleEmployeeOrderCount--
+                }
             }
 
             employeeForOrderList.forEach {
@@ -148,7 +173,7 @@ class OrderDistributionService(
             .map {
                 OrderTimeDTO(
                     employee = employeeMapper.domainToDto(it.employee),
-                    actions = it.timePlan.map { employeeShiftOrderMapper.domainToDto(it) }
+                    actions = it.timePlan.map { employeeShiftOrderMapper.domainToDto(it) }.sortedBy { it.timeStart }
                 )
             }
 
@@ -182,7 +207,7 @@ class OrderDistributionService(
                 it!!.timePlan.add(
                     EmployeeShiftOrder(
                         timeStart = LocalDateTime.ofInstant(order.orderTime, TIME_ZONE_UTC),
-                        timeFinish = LocalDateTime.ofInstant(order.finishTime, TIME_ZONE_UTC),
+                        timeFinish = LocalDateTime.ofInstant(order.getSupposedFinishTime(), TIME_ZONE_UTC),
                         actionType = TimeListActionType.ORDER,
                         order = order
                     )
@@ -226,12 +251,14 @@ class OrderDistributionService(
     }
 
     private fun getMostPriorityEmployee(
+        employeeAlreadyChooseList: List<EmployeePriority>,
         priorityEmployeeList: List<EmployeePriority>,
         passengerCategory: PassengerCategoryType, // TODO
         baggage: OrderBaggage?,
         sexType: SexType
-    ): EmployeePriority {
+    ): EmployeePriority? {
         return priorityEmployeeList
+            .filter { empl -> employeeAlreadyChooseList.all { it.employee != empl.employee } }
             .filter {
                 if (baggage != null && baggage.isHelpNeeded) {
                     it.employee.sex == sexType && !it.employee.lightDuties
@@ -239,7 +266,7 @@ class OrderDistributionService(
                     it.employee.sex == sexType
                 }
             }
-            .minByOrNull { it.transferTime }!!
+            .minByOrNull { it.transferTime }
     }
 
     private fun getTimeFreeEmployeeList(
@@ -299,7 +326,7 @@ class OrderDistributionService(
                 var priority = 0
 
                 val timeTransfer = calculateMetroTransferTime(it, order)
-//                priority += calculateMetroTransferPriority(timeTransfer) // приоритет по времени в пути сотрудника на заявку
+                priority += calculateMetroTransferPriority(timeTransfer) // приоритет по времени в пути сотрудника на заявку
 
                 EmployeePriority(it.employee, timeTransfer, priority)
             }

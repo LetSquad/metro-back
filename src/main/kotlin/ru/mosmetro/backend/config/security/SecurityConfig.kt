@@ -20,11 +20,15 @@ import org.springframework.security.web.server.authorization.HttpStatusServerAcc
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 import reactor.core.publisher.Mono
+import ru.mosmetro.backend.config.properties.MetroSecurityProperties
 
 
 @Configuration
 @EnableWebFluxSecurity
-class SecurityConfig(private val serverProperties: ServerProperties) {
+class SecurityConfig(
+    private val serverProperties: ServerProperties,
+    private val metroSecurityProperties: MetroSecurityProperties
+) {
 
     @Bean
     fun metroBackFilterChain(
@@ -46,7 +50,7 @@ class SecurityConfig(private val serverProperties: ServerProperties) {
             }
             .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 
-        if (serverProperties.ssl?.isEnabled != true) {
+        if (metroSecurityProperties.corsEnables || serverProperties.ssl?.isEnabled != true) {
             config.cors { it.configurationSource(createLocalUrlBasedCorsConfigurationSource()) }
         }
 

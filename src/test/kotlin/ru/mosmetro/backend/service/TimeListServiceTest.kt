@@ -308,18 +308,6 @@ class TimeListServiceTest {
                             actionType = TimeListActionType.DOWNTIME,
                             order = null
                         ),
-                        makeEmployeeShiftOrder(
-                            timeStart = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_START),
-                            actionType = TimeListActionType.METRO_NOT_WORKING,
-                            order = null
-                        ),
-                        makeEmployeeShiftOrder(
-                            timeStart = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_START),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), LocalTime.of(8, 0)),
-                            actionType = TimeListActionType.DOWNTIME,
-                            order = null
-                        )
                     )
                 ),
             )
@@ -379,7 +367,7 @@ class TimeListServiceTest {
             )
 
         // act
-        val result: OrderTimeListDTO = service.getOrderTimeListWithAllTime(date)
+        val result: OrderTimeListDTO = service.getOrderTimeListWithAllTimeForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -609,8 +597,8 @@ class TimeListServiceTest {
         order: PassengerOrder?,
     ): EmployeeShiftOrderDTO {
         return EmployeeShiftOrderDTO(
-            timeStart = timeStart,
-            timeFinish = timeFinish,
+            timeStart = timeStart.toInstant(ZoneOffset.of("+03:00")),
+            timeEnd = timeFinish.toInstant(ZoneOffset.of("+03:00")),
             actionType = actionType,
             order = order?.let { orderMapper.domainToDto(order) },
         )

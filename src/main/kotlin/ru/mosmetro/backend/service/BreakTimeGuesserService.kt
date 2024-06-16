@@ -58,9 +58,9 @@ class BreakTimeGuesserService {
                 passengerOrderList
                     .filter {
                         !(it.orderTime <= start.toInstant(ZoneOffset.UTC)
-                                && it.finishTime!! <= start.toInstant(ZoneOffset.UTC)
+                                && it.getSupposedFinishTime() <= start.toInstant(ZoneOffset.UTC)
                                 || it.orderTime >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC)
-                                && it.finishTime!! >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC))
+                                && it.getSupposedFinishTime() >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC))
 
                     }
 
@@ -184,7 +184,7 @@ class BreakTimeGuesserService {
                                                                 TIME_ZONE_UTC
                                                             ),
                                                             finishTime = LocalDateTime.ofInstant(
-                                                                order.finishTime,
+                                                                order.getSupposedFinishTime(),
                                                                 TIME_ZONE_UTC
                                                             ),
                                                             plans = it.timePlan
@@ -198,7 +198,7 @@ class BreakTimeGuesserService {
                                                             TIME_ZONE_UTC
                                                         ),
                                                         timeFinish = LocalDateTime.ofInstant(
-                                                            order.finishTime,
+                                                            order.getSupposedFinishTime(),
                                                             TIME_ZONE_UTC
                                                         ),
                                                         actionType = TimeListActionType.GUESSING_TECHNICAL_TYPE,
@@ -275,6 +275,17 @@ class BreakTimeGuesserService {
     ): Boolean {
         return LocalDateTime.of(planDate, employee.workStart).plusMinutes(180) <= startTime
                 && LocalDateTime.of(planDate, employee.workFinish).minusMinutes(60) >= finishTime
+    }
+
+    fun hackCleanAllNightBreakTime(
+        employeeTimePlanList: List<OrderTime>
+    ) {
+        employeeTimePlanList
+            .forEach { it.timePlan.removeAll {
+                it.actionType == TimeListActionType.BREAK
+                        && it.timeStart.toLocalTime() == LocalTime.of(3, 0)
+                        && it.timeFinish.toLocalTime() == LocalTime.of(4, 0)
+            } }
     }
 
     companion object {

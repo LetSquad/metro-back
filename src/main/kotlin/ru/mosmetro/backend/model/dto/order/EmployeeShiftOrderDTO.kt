@@ -1,11 +1,11 @@
 package ru.mosmetro.backend.model.dto.order
 
 import ru.mosmetro.backend.model.enums.TimeListActionType
-import java.time.LocalDateTime
+import java.time.Instant
 
 data class EmployeeShiftOrderDTO(
-        val timeStart: LocalDateTime,
-        val timeFinish: LocalDateTime,
+        val timeStart: Instant,
+        val timeEnd: Instant,
         val actionType: TimeListActionType,
         val order: PassengerOrderDTO?,
 )
