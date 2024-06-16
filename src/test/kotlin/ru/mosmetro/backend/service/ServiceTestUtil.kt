@@ -5,7 +5,6 @@ import ru.mosmetro.backend.model.domain.Employee
 import ru.mosmetro.backend.model.domain.EmployeeRank
 import ru.mosmetro.backend.model.domain.EmployeeShiftOrder
 import ru.mosmetro.backend.model.domain.MetroStation
-import ru.mosmetro.backend.model.domain.OrderApplication
 import ru.mosmetro.backend.model.domain.OrderBaggage
 import ru.mosmetro.backend.model.domain.OrderStatus
 import ru.mosmetro.backend.model.domain.OrderTime
@@ -27,10 +26,6 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 
 object ServiceTestUtil {
-
-    val METRO_WORK_TIME_START = LocalTime.of(5, 30)
-    val METRO_WORK_TIME_FINISH = LocalTime.of(1, 0)
-    val TIME_ZONE_UTC = ZoneId.of("UTC")
 
     fun makeOrderTime(
         employee: Employee,
@@ -88,15 +83,15 @@ object ServiceTestUtil {
             id = id,
             startDescription = null,
             finishDescription = null,
-            orderApplication = OrderApplication("", ""),
+            orderApplication = null,
             passengerCount = maleEmployeeCount + femaleEmployeeCount,
             maleEmployeeCount = maleEmployeeCount,
             femaleEmployeeCount = femaleEmployeeCount,
-            duration = Duration.ZERO,
+            duration = Duration.between(orderTime, finishTime),
             additionalInfo = null,
             orderTime = orderTime.toInstant(ZoneOffset.UTC),
             startTime = Instant.now(),
-            finishTime = finishTime.toInstant(ZoneOffset.UTC),
+            finishTime = null,
             absenceTime = null,
             cancelTime = null,
             createdAt = Instant.now(),
@@ -117,9 +112,10 @@ object ServiceTestUtil {
             ),
             baggage = baggage,
             transfers = listOf(),
-            passengerCategory = passengerCategory,
-            startMetroStation = startMetroStation,
-            finishMetroStation = finishMetroStation,
+            passengerCategory = passengerCategory.code,
+            startStation = startMetroStation,
+            finishStation = finishMetroStation,
+            employees = null
         )
     }
 
@@ -140,15 +136,15 @@ object ServiceTestUtil {
             id = id,
             startDescription = null,
             finishDescription = null,
-            orderApplication = OrderApplication("", ""),
+            orderApplication = null,
             passengerCount = maleEmployeeCount + femaleEmployeeCount,
             maleEmployeeCount = maleEmployeeCount,
             femaleEmployeeCount = femaleEmployeeCount,
-            duration = Duration.ZERO,
+            duration = Duration.between(orderTime, finishTime),
             additionalInfo = null,
             orderTime = orderTime.toInstant(ZoneOffset.UTC),
             startTime = Instant.now(),
-            finishTime = finishTime.toInstant(ZoneOffset.UTC),
+            finishTime = null,
             absenceTime = null,
             cancelTime = null,
             createdAt = createdAt.toInstant(ZoneOffset.UTC),
@@ -169,9 +165,10 @@ object ServiceTestUtil {
             ),
             baggage = baggage,
             transfers = listOf(),
-            passengerCategory = passengerCategory,
-            startMetroStation = startMetroStation,
-            finishMetroStation = finishMetroStation,
+            passengerCategory = passengerCategory.code,
+            startStation = startMetroStation,
+            finishStation = finishMetroStation,
+            employees = null
         )
     }
 
@@ -244,8 +241,8 @@ object ServiceTestUtil {
                 val strBuilder = StringBuilder()
                 strBuilder.append("\n")
                 strBuilder.append("\nemployee: ").append(employee.id)
-                strBuilder.append("\nstart: ").append(it.timeStart)
-                strBuilder.append("\nfinish: ").append(it.timeFinish)
+                strBuilder.append("\nstart: ").append(LocalDateTime.ofInstant(it.timeStart, ZoneId.of("+03:00")))
+                strBuilder.append("\nfinish: ").append(LocalDateTime.ofInstant(it.timeEnd, ZoneId.of("+03:00")))
                 strBuilder.append("\ntype: ").append(it.actionType)
                 strBuilder.append("\norder: ").append(it.order)
 
@@ -287,7 +284,7 @@ object ServiceTestUtil {
             .sortedBy { it.timeStart }
             .forEachIndexed { index, value ->
                 Assertions.assertEquals(value.timeStart, actualActions[index].timeStart)
-                Assertions.assertEquals(value.timeFinish, actualActions[index].timeFinish)
+                Assertions.assertEquals(value.timeEnd, actualActions[index].timeEnd)
                 Assertions.assertEquals(value.actionType, actualActions[index].actionType)
                 Assertions.assertEquals(value.order, actualActions[index].order)
             }

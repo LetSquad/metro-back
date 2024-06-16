@@ -18,3 +18,12 @@ metro:
 logging:
   level:
     ru.mosmetro.backend: debug
+
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store-type: PKCS12
+    key-store: classpath:/metro-back.p12
+    key-store-password: qwe123
+    key-alias: baeldung

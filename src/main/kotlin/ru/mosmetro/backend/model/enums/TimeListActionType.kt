@@ -16,9 +16,6 @@ enum class TimeListActionType {
     // не работает по графику
     NON_WORKING,
 
-    // метро не работает в данный период
-    METRO_NOT_WORKING,
-
     // нужно для угадывания вреиени, не передается на фронт
     GUESSING_TECHNICAL_TYPE,
 }

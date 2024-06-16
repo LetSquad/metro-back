@@ -31,4 +31,9 @@ data class PassengerOrder(
     val startStation: MetroStation,
     val finishStation: MetroStation,
     val employees: Set<Employee>?
-)
+) {
+    fun getSupposedFinishTime(
+    ): Instant {
+        return this.orderTime.plusSeconds(this.duration.toSeconds())
+    }
+}

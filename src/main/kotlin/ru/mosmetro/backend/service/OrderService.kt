@@ -106,11 +106,11 @@ class OrderService(
         return ListWithTotal(passengerOrders.size, passengerOrders)
     }
 
-    fun getOrdersBetweenStartDate(
+    fun getOrdersBetweenOrderDate(
         dateStart: LocalDateTime,
         dateFinish: LocalDateTime,
     ): List<PassengerOrder> {
-        return  passengerOrderEntityRepository.findAllByStartTimeBetween(
+        return  passengerOrderEntityRepository.findAllByOrderTimeBetween(
             dateStart.toInstant(ZoneOffset.UTC),
             dateFinish.toInstant(ZoneOffset.UTC))
             .map { orderMapper.entityToDomain(it) }

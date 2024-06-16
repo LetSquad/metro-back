@@ -15,7 +15,7 @@ import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderFilterRequestDTO
-import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
+import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersRequestDTO
 import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
@@ -49,7 +49,7 @@ class OrderController(
         summary = "Получение временного графика всех заявок на завтра"
     )
     @GetMapping("time-list")
-    suspend fun getOrdersTimeList(): OrderTimeListDTO {
+    suspend fun getOrdersTimeList(): ListWithTotal<OrderTimeDTO> {
         val tomorrowDate = LocalDate.now().plusDays(1)
         return timeListService.getOrderTimeListWithAllTime(tomorrowDate)
     }
@@ -122,7 +122,7 @@ class OrderController(
         summary = "Распределение заявок"
     )
     @PostMapping("/distribution")
-    fun calculateOrderDistribution(): OrderTimeListDTO {
+    fun calculateOrderDistribution(): ListWithTotal<OrderTimeDTO> {
         val tomorrowDate = LocalDate.now().plusDays(1)
         return distributionService.calculateOrderDistribution(tomorrowDate)
     }

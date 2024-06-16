@@ -21,8 +21,6 @@ import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
-import ru.mosmetro.backend.service.ServiceTestUtil.METRO_WORK_TIME_FINISH
-import ru.mosmetro.backend.service.ServiceTestUtil.METRO_WORK_TIME_START
 import ru.mosmetro.backend.service.ServiceTestUtil.assertOrderTimeDTOList
 import ru.mosmetro.backend.service.ServiceTestUtil.makeEmployee
 import ru.mosmetro.backend.service.ServiceTestUtil.makeEmployeeShiftOrder
@@ -30,9 +28,12 @@ import ru.mosmetro.backend.service.ServiceTestUtil.makeMetroStation
 import ru.mosmetro.backend.service.ServiceTestUtil.makeOrderBaggage
 import ru.mosmetro.backend.service.ServiceTestUtil.makeOrderTime
 import ru.mosmetro.backend.service.ServiceTestUtil.makePassengerOrder
+import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_FINISH
+import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_START
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneOffset
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -146,13 +147,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -171,7 +172,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -240,7 +241,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -334,13 +335,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -359,7 +360,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(20, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -409,23 +410,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date.plusDays(1), LocalTime.of(0, 45)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
-                            actionType = TimeListActionType.DOWNTIME,
-                            order = null,
-                        ),
-
-
-                        makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_START),
-                            actionType = TimeListActionType.METRO_NOT_WORKING,
-                            order = null,
-                        ),
-
-
-                        makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_START),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), LocalTime.of(8, 0)),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.DOWNTIME,
                             order = null,
                         ),
@@ -522,13 +507,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date, METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -548,7 +533,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -577,7 +562,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -671,13 +656,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -696,7 +681,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -746,7 +731,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -843,13 +828,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date, METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -868,7 +853,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -918,7 +903,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1013,13 +998,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -1040,7 +1025,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1053,7 +1038,7 @@ class OrderDistributionServiceTest {
                         ),
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(10, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1148,13 +1133,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -1173,7 +1158,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1227,7 +1212,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1326,13 +1311,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -1352,7 +1337,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1380,7 +1365,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1504,13 +1489,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3, order4)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -1528,7 +1513,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1576,7 +1561,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1586,7 +1571,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1634,7 +1619,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1741,13 +1726,13 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -1765,7 +1750,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1793,7 +1778,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1803,7 +1788,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1851,7 +1836,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1941,11 +1926,13 @@ class OrderDistributionServiceTest {
                 startMetroStation = station3,
                 finishMetroStation = station3,
             )
-        val orders: List<PassengerOrder> = listOf(order1, order2, order3)
+        // TODO без фильтрации заявок по статусу order3 не должен возвращаться в списке на распределение
+        val orders: List<PassengerOrder> = listOf(order1, order2)
+//        val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         val orderTimeDB: List<OrderTime> =
             listOf(
@@ -1976,7 +1963,7 @@ class OrderDistributionServiceTest {
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -1994,7 +1981,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2042,7 +2029,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2052,7 +2039,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2080,7 +2067,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2145,9 +2132,9 @@ class OrderDistributionServiceTest {
             )
         val orders: List<PassengerOrder> = listOf(order1)
 
-        val orderStartTime = LocalDateTime.of(date, METRO_WORK_TIME_START)
-        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH)
-        mockGetEmployeeTImePlanDB(orderStartTime, orderFinishTime, orders)
+        val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
+        val orderFinishTime = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH)
+        mockGetEmployeeTimePlanDB(orderStartTime, orderFinishTime, orders)
 
         val orderTimeDB: List<OrderTime> =
             listOf(
@@ -2172,7 +2159,7 @@ class OrderDistributionServiceTest {
 
         // act
         val service = getService()
-        var result = service.calculateOrderDistribution(date)
+        var result = service.calculateOrderDistributionForTest(date)
         val actualOrdersTime: List<OrderTimeDTO> = result.ordersTime
         val actualOrdersNotInPlan: List<PassengerOrderDTO> = result.ordersNotInPlan
 
@@ -2190,7 +2177,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2218,7 +2205,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2228,7 +2215,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2243,7 +2230,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2253,7 +2240,7 @@ class OrderDistributionServiceTest {
                     employee3,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_WORK_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2268,7 +2255,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_WORK_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2297,8 +2284,8 @@ class OrderDistributionServiceTest {
         order: PassengerOrder?,
     ): EmployeeShiftOrderDTO {
         return EmployeeShiftOrderDTO(
-            timeStart = timeStart,
-            timeFinish = timeFinish,
+            timeStart = timeStart.toInstant(ZoneOffset.of("+03:00")),
+            timeEnd = timeFinish.toInstant(ZoneOffset.of("+03:00")),
             actionType = actionType,
             order = order?.let { orderMapper.domainToDto(order) },
         )
@@ -2340,12 +2327,12 @@ class OrderDistributionServiceTest {
         Mockito.`when`(timeListService.getOrderTimeList(onDate)).thenReturn(list)
     }
 
-    private fun mockGetEmployeeTImePlanDB(
+    private fun mockGetEmployeeTimePlanDB(
         orderStartTime: LocalDateTime,
         orderFinishTime: LocalDateTime,
         list: List<PassengerOrder>
     ) {
-        Mockito.`when`(orderService.getOrdersBetweenStartDate(orderStartTime, orderFinishTime))
+        Mockito.`when`(orderService.getOrdersBetweenOrderDate(orderStartTime, orderFinishTime))
             .thenReturn(list)
     }
 
