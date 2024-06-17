@@ -5,6 +5,7 @@ import ru.mosmetro.backend.model.domain.Employee
 import ru.mosmetro.backend.model.domain.EmployeeRank
 import ru.mosmetro.backend.model.domain.EmployeeShiftOrder
 import ru.mosmetro.backend.model.domain.MetroStation
+import ru.mosmetro.backend.model.domain.OrderApplication
 import ru.mosmetro.backend.model.domain.OrderBaggage
 import ru.mosmetro.backend.model.domain.OrderStatus
 import ru.mosmetro.backend.model.domain.OrderTime
@@ -15,6 +16,7 @@ import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
 import ru.mosmetro.backend.model.dto.order.EmployeeShiftOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.enums.EmployeeRoleType
+import ru.mosmetro.backend.model.enums.OrderApplicationType
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
@@ -83,7 +85,7 @@ object ServiceTestUtil {
             id = id,
             startDescription = null,
             finishDescription = null,
-            orderApplication = null,
+            orderApplication = OrderApplication(OrderApplicationType.ELECTRONIC_SERVICES, "Электронные сервисы"),
             passengerCount = maleEmployeeCount + femaleEmployeeCount,
             maleEmployeeCount = maleEmployeeCount,
             femaleEmployeeCount = femaleEmployeeCount,
@@ -109,6 +111,7 @@ object ServiceTestUtil {
                 createdAt = Instant.now(),
                 deletedAt = null,
                 category = passengerCategory,
+                phones = emptySet()
             ),
             baggage = baggage,
             transfers = listOf(),
@@ -136,7 +139,7 @@ object ServiceTestUtil {
             id = id,
             startDescription = null,
             finishDescription = null,
-            orderApplication = null,
+            orderApplication = OrderApplication(OrderApplicationType.ELECTRONIC_SERVICES, "Электронные сервисы"),
             passengerCount = maleEmployeeCount + femaleEmployeeCount,
             maleEmployeeCount = maleEmployeeCount,
             femaleEmployeeCount = femaleEmployeeCount,
@@ -162,6 +165,7 @@ object ServiceTestUtil {
                 createdAt = Instant.now(),
                 deletedAt = null,
                 category = passengerCategory,
+                phones = emptySet()
             ),
             baggage = baggage,
             transfers = listOf(),

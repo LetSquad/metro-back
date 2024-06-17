@@ -15,6 +15,21 @@ class MetroTransfersServiceTest {
     lateinit var transfersService: MetroTransfersService
 
     @Test
+    fun testRouteWithFirstCrosswalking() {
+        val response: OrderTransfersResponseDTO = transfersService.calculateTransfers(
+            OrderTransfersRequestDTO(
+                startStation = SKOBELEVSKAYA_STATION_ID,
+                finishStation = VDNH_STATION_ID
+            )
+        )
+
+        assertEquals("Улица Скобелевская", response.transfers.first().startStation.name)
+        assertEquals("Улица Старокачаловская", response.transfers.first().finishStation.name)
+        assertEquals("Октябрьская КРЛ", response.transfers.last().startStation.name)
+        assertEquals("ВДНХ", response.transfers.last().finishStation.name)
+    }
+
+    @Test
     fun testRouteWithTransfers() {
         val response: OrderTransfersResponseDTO = transfersService.calculateTransfers(
             OrderTransfersRequestDTO(
@@ -71,5 +86,8 @@ class MetroTransfersServiceTest {
         private const val SOKOL_STATION_ID = 26L
         private const val AIRPORT_STATION_ID = 27L
         private const val NAGORNAYA_STATION_ID = 165L
+
+        private const val SKOBELEVSKAYA_STATION_ID = 197L
+        private const val VDNH_STATION_ID = 96L
     }
 }

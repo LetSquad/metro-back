@@ -1,7 +1,7 @@
 package ru.mosmetro.backend.service
 
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
-import org.jgrapht.graph.DefaultUndirectedWeightedGraph
+import org.jgrapht.graph.DefaultDirectedWeightedGraph
 import org.jgrapht.graph.DefaultWeightedEdge
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.mapper.MetroStationMapper
@@ -49,7 +49,7 @@ class MetroTransfersService(
         startStationId: Long,
         finishStationId: Long
     ): OrderTransfers {
-        val graph = DefaultUndirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java)
+        val graph = DefaultDirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java)
 
         for (station in allStations.values) {
             graph.addVertex(station.id)
@@ -111,7 +111,7 @@ class MetroTransfersService(
                     resultPath.add(
                         MetroStationTransfer(
                             startStation = startStation,
-                            finishStation = currentStation,
+                            finishStation = nextStation,
                             duration = Duration.ofSeconds(transferDuration + duration),
                             isCrosswalking = false
                         )
