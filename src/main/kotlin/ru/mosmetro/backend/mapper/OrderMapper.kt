@@ -3,12 +3,8 @@ package ru.mosmetro.backend.mapper
 import java.time.Duration
 import java.time.Instant
 import org.springframework.stereotype.Component
-import ru.mosmetro.backend.model.domain.MetroStation
-import ru.mosmetro.backend.model.domain.OrderApplication
-import ru.mosmetro.backend.model.domain.OrderBaggage
-import ru.mosmetro.backend.model.domain.OrderStatus
-import ru.mosmetro.backend.model.domain.Passenger
-import ru.mosmetro.backend.model.domain.PassengerOrder
+import ru.mosmetro.backend.model.domain.*
+import ru.mosmetro.backend.model.dto.metro.MetroStationTransferDTO
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderApplicationDTO
 import ru.mosmetro.backend.model.dto.order.OrderBaggageDTO
@@ -106,7 +102,8 @@ class OrderMapper(
         mapper: NewPassengerOrderDTO,
         startStation: MetroStation,
         finishStation: MetroStation,
-        passenger: Passenger
+        passenger: Passenger,
+        transfers: List<MetroStationTransferDTO>
     ) = PassengerOrder(
         id = null,
         startDescription = mapper.startDescription,
@@ -142,7 +139,7 @@ class OrderMapper(
         orderStatus = OrderStatus(OrderStatusType.REVIEW, "В рассмотрении"),
         passenger = passenger,
         passengerCategory = mapper.passengerCategory ?: passenger.category.code,
-        transfers = mapper.transfers.map { metroStationTransferMapper.dtoToDomain(it) },
+        transfers = transfers.map { metroStationTransferMapper.dtoToDomain(it) },
         duration = Duration.ofSeconds(mapper.duration),
         employees = emptySet()
     )

@@ -12,6 +12,7 @@ import ru.mosmetro.backend.mapper.PassengerMapper
 import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
+import ru.mosmetro.backend.model.dto.metro.MetroStationTransferDTO
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderFilterRequestDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
@@ -37,7 +38,7 @@ class OrderService(
     private val passengerService: PassengerService,
     private val passengerMapper: PassengerMapper,
     private val metroService: MetroService,
-    private val metroStationMapper: MetroStationMapper
+    private val metroStationMapper: MetroStationMapper,
 ) {
 
     /**
@@ -170,9 +171,15 @@ class OrderService(
             .let { metroStationMapper.dtoToDomain(it) }
         val finishStation = metroService.getMetroStationById(newPassengerOrderDTO.finishStation)
             .let { metroStationMapper.dtoToDomain(it) }
+        val transfers = newPassengerOrderDTO.transfers.map { MetroStationTransferDTO(
+            metroService.getMetroStationById(it.startStation),
+            metroService.getMetroStationById(it.finishStation),
+            it.duration,
+            it.isCrosswalking
+        ) }
 
         return newPassengerOrderDTO
-            .let { orderMapper.dtoToDomain(it, startStation, finishStation, passenger) }
+            .let { orderMapper.dtoToDomain(it, startStation, finishStation, passenger, transfers) }
             .let {
                 orderMapper.domainToEntity(
                     it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
