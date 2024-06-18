@@ -177,7 +177,7 @@ class OrderMapper(
         finishStation = finishStation,
         orderStatus = OrderStatus(OrderStatusType.ACCEPTED, "Принята"),
         passenger = passenger,
-        passengerCategory = mapper.passengerCategory,
+        passengerCategory = mapper.passengerCategory ?: passenger.category.code,
         transfers = transfers.map { metroStationTransferMapper.dtoToDomain(it) },
         duration = Duration.ofSeconds(mapper.duration),
         employees = emptySet()

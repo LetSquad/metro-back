@@ -30,7 +30,7 @@ data class UpdatedPassengerOrderDTO(
     @Schema(description = "Сотрудники, прикрепленные к заявке")
     val employees: Set<Long>?,
     @Schema(description = "Категория пассажира")
-    val passengerCategory: PassengerCategoryType,
+    val passengerCategory: PassengerCategoryType?,
     @Schema(description = "Идентификатор начальной станции маршрута")
     val startStation: Long,
     @Schema(description = "Идентификатор конечной станции маршрута")
