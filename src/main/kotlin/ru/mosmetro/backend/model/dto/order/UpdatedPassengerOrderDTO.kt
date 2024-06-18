@@ -1,12 +1,8 @@
 package ru.mosmetro.backend.model.dto.order
 
 import io.swagger.v3.oas.annotations.media.Schema
-import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
 import java.time.Instant
-import ru.mosmetro.backend.model.dto.metro.MetroStationDTO
-import ru.mosmetro.backend.model.dto.metro.MetroStationTransferDTO
-import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
-import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
+import ru.mosmetro.backend.model.dto.metro.MetroStationTransferNewDTO
 import ru.mosmetro.backend.model.enums.OrderApplicationType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 
@@ -40,7 +36,7 @@ data class UpdatedPassengerOrderDTO(
     @Schema(description = "Идентификатор конечной станции маршрута")
     val finishStation: Long,
     @Schema(description = "Пересадки в пути")
-    val transfers: List<MetroStationTransferDTO>,
+    val transfers: List<MetroStationTransferNewDTO>,
     @Schema(description = "Время заявки в секундах")
     val duration: Long
 )

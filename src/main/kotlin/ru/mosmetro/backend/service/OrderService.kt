@@ -220,6 +220,13 @@ class OrderService(
         val finishStation = metroService.getMetroStationById(updatedPassengerOrderDTO.finishStation)
             .let { metroStationMapper.dtoToDomain(it) }
 
+        val transfers = updatedPassengerOrderDTO.transfers.map { MetroStationTransferDTO(
+            metroService.getMetroStationById(it.startStation),
+            metroService.getMetroStationById(it.finishStation),
+            it.duration,
+            it.isCrosswalking
+        ) }
+
         return updatedPassengerOrderDTO
             .let {
                 orderMapper.dtoToDomain(
@@ -228,7 +235,8 @@ class OrderService(
                     id,
                     startStation,
                     finishStation,
-                    passenger
+                    passenger,
+                    transfers
                 )
             }
             .let {

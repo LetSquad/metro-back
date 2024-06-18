@@ -146,7 +146,7 @@ class OrderMapper(
 
     fun dtoToDomain(
         mapper: UpdatedPassengerOrderDTO, createdAt: Instant, id: Long,
-        startStation: MetroStation, finishStation: MetroStation, passenger: Passenger
+        startStation: MetroStation, finishStation: MetroStation, passenger: Passenger, transfers: List<MetroStationTransferDTO>
     ) = PassengerOrder(
         id = id,
         startDescription = mapper.startDescription,
@@ -178,7 +178,7 @@ class OrderMapper(
         orderStatus = OrderStatus(OrderStatusType.ACCEPTED, "Принята"),
         passenger = passenger,
         passengerCategory = mapper.passengerCategory,
-        transfers = mapper.transfers.map { metroStationTransferMapper.dtoToDomain(it) },
+        transfers = transfers.map { metroStationTransferMapper.dtoToDomain(it) },
         duration = Duration.ofSeconds(mapper.duration),
         employees = emptySet()
     )
