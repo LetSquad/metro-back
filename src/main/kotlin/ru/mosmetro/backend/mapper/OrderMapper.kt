@@ -1,9 +1,12 @@
 package ru.mosmetro.backend.mapper
 
-import java.time.Duration
-import java.time.Instant
 import org.springframework.stereotype.Component
-import ru.mosmetro.backend.model.domain.*
+import ru.mosmetro.backend.model.domain.MetroStation
+import ru.mosmetro.backend.model.domain.OrderApplication
+import ru.mosmetro.backend.model.domain.OrderBaggage
+import ru.mosmetro.backend.model.domain.OrderStatus
+import ru.mosmetro.backend.model.domain.Passenger
+import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.metro.MetroStationTransferDTO
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderApplicationDTO
@@ -20,6 +23,8 @@ import ru.mosmetro.backend.model.enums.OrderApplicationType
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.service.MetroTransfersService
+import java.time.Duration
+import java.time.Instant
 
 @Component
 class OrderMapper(
@@ -75,11 +80,11 @@ class OrderMapper(
         femaleEmployeeCount = mapper.femaleEmployeeCount,
         additionalInfo = mapper.additionalInfo,
         // TODO dirty hack
-        orderTime = mapper.orderTime.minusSeconds(60 * 60 * 3),
-        startTime = mapper.startTime?.minusSeconds(60 * 60 * 3),
-        finishTime = mapper.finishTime?.minusSeconds(60 * 60 * 3),
-        absenceTime = mapper.absenceTime?.minusSeconds(60 * 60 * 3),
-        cancelTime = mapper.cancelTime?.minusSeconds(60 * 60 * 3),
+        orderTime = if (mapper.id!! < 477354) mapper.orderTime else mapper.orderTime.minusSeconds(60 * 60 * 3),
+        startTime = if (mapper.id < 477354) mapper.startTime else mapper.startTime?.minusSeconds(60 * 60 * 3),
+        finishTime = if (mapper.id < 477354) mapper.finishTime else mapper.finishTime?.minusSeconds(60 * 60 * 3),
+        absenceTime = if (mapper.id < 477354) mapper.absenceTime else mapper.absenceTime?.minusSeconds(60 * 60 * 3),
+        cancelTime = if (mapper.id < 477354) mapper.cancelTime else mapper.cancelTime?.minusSeconds(60 * 60 * 3),
         baggage = if (mapper.baggage != null) {
             OrderBaggageDTO(
                 mapper.baggage.type,
@@ -108,10 +113,9 @@ class OrderMapper(
         id = null,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
-        //TODO dirty hack
         orderApplication = OrderApplication(
-            OrderApplicationType.ELECTRONIC_SERVICES,
-            OrderApplicationType.ELECTRONIC_SERVICES.name
+            mapper.orderApplication ?: OrderApplicationType.ELECTRONIC_SERVICES,
+            mapper.orderApplication?.name ?: OrderApplicationType.ELECTRONIC_SERVICES.name
         ),
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
@@ -151,7 +155,10 @@ class OrderMapper(
         id = id,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
-        orderApplication = OrderApplication(OrderApplicationType.ELECTRONIC_SERVICES, "Электронные сервисы"),
+        orderApplication = OrderApplication(
+            mapper.orderApplication,
+            mapper.orderApplication.label
+        ),
         passengerCount = mapper.passengerCount,
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
