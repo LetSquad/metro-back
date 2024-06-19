@@ -79,12 +79,11 @@ class OrderMapper(
         maleEmployeeCount = mapper.maleEmployeeCount,
         femaleEmployeeCount = mapper.femaleEmployeeCount,
         additionalInfo = mapper.additionalInfo,
-        // TODO dirty hack
-        orderTime = if (mapper.id!! < 477354) mapper.orderTime else mapper.orderTime.minusSeconds(60 * 60 * 3),
-        startTime = if (mapper.id < 477354) mapper.startTime else mapper.startTime?.minusSeconds(60 * 60 * 3),
-        finishTime = if (mapper.id < 477354) mapper.finishTime else mapper.finishTime?.minusSeconds(60 * 60 * 3),
-        absenceTime = if (mapper.id < 477354) mapper.absenceTime else mapper.absenceTime?.minusSeconds(60 * 60 * 3),
-        cancelTime = if (mapper.id < 477354) mapper.cancelTime else mapper.cancelTime?.minusSeconds(60 * 60 * 3),
+        orderTime = mapper.orderTime,
+        startTime = mapper.startTime,
+        finishTime = mapper.finishTime,
+        absenceTime = mapper.absenceTime,
+        cancelTime = mapper.cancelTime,
         baggage = if (mapper.baggage != null) {
             OrderBaggageDTO(
                 mapper.baggage.type,
