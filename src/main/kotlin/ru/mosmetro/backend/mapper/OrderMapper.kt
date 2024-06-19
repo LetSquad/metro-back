@@ -217,6 +217,6 @@ class OrderMapper(
         passengerCategory = passengerEntity.category,
         transfers = mapper.transfers,
         duration = mapper.duration,
-        orderApplication = mapper.orderApplication.name,
+        orderApplication = mapper.orderApplication.code.name,
     )
 }
