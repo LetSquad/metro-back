@@ -1,9 +1,6 @@
 package ru.mosmetro.backend.service
 
 import jakarta.persistence.EntityNotFoundException
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.NoSuchOrderException
 import ru.mosmetro.backend.mapper.MetroStationMapper
@@ -25,6 +22,9 @@ import ru.mosmetro.backend.repository.OrderStatusEntityRepository
 import ru.mosmetro.backend.repository.PassengerOrderEntityRepository
 import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
 import ru.mosmetro.backend.util.jpaContext
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 class OrderService(
@@ -55,11 +55,9 @@ class OrderService(
             .atStartOfDay()
             .toInstant(ZoneOffset.UTC)
 
-        val passengerPhones = passengerPhoneEntityRepository.findAll()
-            .groupBy({ it.passenger?.id }, { it })
         val passengerOrders = jpaContext { passengerOrderEntityRepository.findAllByOrderTimeBetween(dateFrom, dateTo) }
             .map {
-                val passengerPhones = passengerPhones.getOrElse(it.passenger.id) { emptyList() }
+                val passengerPhones = passengerService.passengerPhoneCache.getOrElse(it.passenger.id) { emptyList() }
                     .toSet()
                 orderMapper.entityToDomain(it, passengerPhones)
             }

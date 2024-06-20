@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.service
 
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftOrderMapper
@@ -28,7 +29,6 @@ import java.time.ZoneOffset
 
 @Service
 class OrderDistributionService(
-    private val subscriptionService: EntitySubscriptionService,
     private val timeListService: TimeListService,
     private val orderService: OrderService,
     private val metroTransfersService: MetroTransfersService,
@@ -39,7 +39,7 @@ class OrderDistributionService(
     private val employeeShiftOrderMapper: EmployeeShiftOrderMapper
 ) {
 
-    fun calculateOrderDistribution(
+    suspend fun calculateOrderDistribution(
         planDate: LocalDate
     ): ListWithTotal<OrderTimeDTO> {
         val result: OrderTimeListDTO = calculateOrderDistribution(planDate, true, true)
@@ -50,16 +50,14 @@ class OrderDistributionService(
     fun calculateOrderDistributionForTest(
         planDate: LocalDate
     ): OrderTimeListDTO {
-        return calculateOrderDistribution(planDate, false, false)
+        return runBlocking { calculateOrderDistribution(planDate, false, false) }
     }
 
-    fun calculateOrderDistribution(
+    suspend fun calculateOrderDistribution(
         planDate: LocalDate,
         guessBreakTime: Boolean,
         addTransferPeriod: Boolean,
     ): OrderTimeListDTO {
-        subscriptionService.notifyOrderUpdate()
-
         // получаем всех занятых сотрудников исходя из их графика работы
         // создаем на всех лист занятости
         val employeeTimePlanList: List<OrderTime> = timeListService.getOrderTimeList(planDate)

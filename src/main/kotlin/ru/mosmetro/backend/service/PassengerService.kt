@@ -10,6 +10,7 @@ import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
+import ru.mosmetro.backend.model.entity.PassengerPhoneEntity
 import ru.mosmetro.backend.repository.PassengerCategoryEntityRepository
 import ru.mosmetro.backend.repository.PassengerEntityRepository
 import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
@@ -26,17 +27,18 @@ class PassengerService(
     private val passengerCategoryEntityRepository: PassengerCategoryEntityRepository
 ) {
 
+    val passengerPhoneCache: Map<Long?, List<PassengerPhoneEntity>> = passengerPhoneEntityRepository.findAll()
+        .groupBy({ it.passengerId!! }, { it }) //TODO: обновлять кэш при обновлении телефонов
+
     /**
      *
      * Метод возвращает список всех пассажиров в системе
      *
      * */
     suspend fun getPassengers(): ListWithTotal<PassengerDTO> {
-        val passengerPhones = passengerPhoneEntityRepository.findAll()
-            .groupBy({ it.passenger?.id }, { it })
         val passengerDTOList = jpaContext { passengerEntityRepository.findAll() }
             .map {
-                val passengerPhones = passengerPhones.getOrElse(it.id) { emptyList() }
+                val passengerPhones = passengerPhoneCache.getOrElse(it.id) { emptyList() }
                     .toSet()
                 passengerMapper.entityToDomain(it, passengerPhones)
             }

@@ -1,8 +1,5 @@
 package ru.mosmetro.backend.service
 
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftMapper
@@ -15,10 +12,13 @@ import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftOrderEntityRepository
-import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_FINISH
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_START
 import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_UTC
+import ru.mosmetro.backend.util.jpaContext
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class TimeListService(
@@ -27,7 +27,7 @@ class TimeListService(
     val employeeMapper: EmployeeMapper,
     val employeeShiftMapper: EmployeeShiftMapper,
     val employeeShiftOrderMapper: EmployeeShiftOrderMapper,
-    val passengerPhoneEntityRepository: PassengerPhoneEntityRepository,
+    val passengerService: PassengerService
 ) {
 
     fun addAllTime(
@@ -45,22 +45,20 @@ class TimeListService(
         }
     }
 
-    fun getOrderTimeListWithAllTime(
+    suspend fun getOrderTimeListWithAllTime(
         timePlanDate: LocalDate
     ): ListWithTotal<OrderTimeDTO> {
         val instantDate = timePlanDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
-        val passengerPhones = passengerPhoneEntityRepository.findAll()
-            .groupBy({ it.passenger?.id }, { it })
         val result: List<OrderTimeDTO> =
-            employeeShiftEntityRepository.findAllByShiftDate(instantDate)
+            jpaContext { employeeShiftEntityRepository.findAllByShiftDate(instantDate) }
                 .map { employeeShiftMapper.entityToDomain(it) }
                 .map { employeeShift ->
                     val actionOrderTimeList =
-                        employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!)
+                        jpaContext { employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!) }
                             .filter { it.isAttached }
                             .map {
-                                val passengerPhones = passengerPhones.getOrElse(it.order?.id) { emptyList() }
+                                val passengerPhones = passengerService.passengerPhoneCache.getOrElse(it.order?.id) { emptyList() }
                                     .toSet()
                                 employeeShiftOrderMapper.entityToDomain(it, passengerPhones)
                             }
@@ -81,8 +79,6 @@ class TimeListService(
     ): OrderTimeListDTO {
         val instantDate = timePlanDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
-        val passengerPhones = passengerPhoneEntityRepository.findAll()
-            .groupBy({ it.passenger?.id }, { it })
         val result: List<OrderTimeDTO> =
             employeeShiftEntityRepository.findAllByShiftDate(instantDate)
                 .map { employeeShiftMapper.entityToDomain(it) }
@@ -91,7 +87,7 @@ class TimeListService(
                         employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!)
                             .filter { it.isAttached }
                             .map {
-                                val passengerPhones = passengerPhones.getOrElse(it.order?.id) { emptyList() }
+                                val passengerPhones = passengerService.passengerPhoneCache.getOrElse(it.order?.id) { emptyList() }
                                     .toSet()
                                 employeeShiftOrderMapper.entityToDomain(it, passengerPhones)
                             }
@@ -110,21 +106,19 @@ class TimeListService(
         )
     }
 
-    fun getOrderTimeList(
+    suspend fun getOrderTimeList(
         timePlanDate: LocalDate
     ): List<OrderTime> {
         val instantDate = timePlanDate.atStartOfDay(TIME_ZONE_UTC).toInstant()
 
-        val passengerPhones = passengerPhoneEntityRepository.findAll()
-            .groupBy({ it.passenger?.id }, { it })
-        return employeeShiftEntityRepository.findAllByShiftDate(instantDate)
+        return jpaContext { employeeShiftEntityRepository.findAllByShiftDate(instantDate) }
             .map { employeeShiftMapper.entityToDomain(it) }
             .map { employeeShift ->
                 val actionOrderTimeList: List<EmployeeShiftOrder> =
-                    employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!)
+                    jpaContext { employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!) }
                         .filter { it.isAttached }
                         .map {
-                            val passengerPhones = passengerPhones.getOrElse(it.order?.id) { emptyList() }
+                            val passengerPhones = passengerService.passengerPhoneCache.getOrElse(it.order?.id) { emptyList() }
                                 .toSet()
                             employeeShiftOrderMapper.entityToDomain(it, passengerPhones)
                         }
