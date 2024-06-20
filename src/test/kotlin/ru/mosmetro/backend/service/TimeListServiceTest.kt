@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.service
 
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -483,7 +484,7 @@ class TimeListServiceTest {
             )
 
         // act
-        val actualOrdersTime: List<OrderTime> = service.getOrderTimeList(date)
+        val actualOrdersTime: List<OrderTime> = runBlocking { service.getOrderTimeList(date) }
 
         // assert
         val expectedOrdersTime: List<OrderTime> =

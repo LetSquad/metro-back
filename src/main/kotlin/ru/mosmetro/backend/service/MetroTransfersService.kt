@@ -1,8 +1,10 @@
 package ru.mosmetro.backend.service
 
+import jakarta.annotation.PostConstruct
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultDirectedWeightedGraph
 import org.jgrapht.graph.DefaultWeightedEdge
+import org.jgrapht.graph.concurrent.AsSynchronizedGraph
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.mapper.MetroStationMapper
 import ru.mosmetro.backend.mapper.MetroStationTransferMapper
@@ -20,15 +22,36 @@ class MetroTransfersService(
     private val stationMapper: MetroStationMapper,
     private val stationTransferMapper: MetroStationTransferMapper,
     stationRepository: MetroStationEntityRepository,
-    stationTransferEntityRepository: MetroStationTransferEntityRepository
+    private val stationTransferEntityRepository: MetroStationTransferEntityRepository
 ) {
 
     private val allStations: Map<Long, MetroStation> = stationRepository.findAll()
         .map { stationMapper.entityToDomain(it) }
         .associateBy { it.id!! }
 
-    private val allTransfers: List<MetroStationTransfer> = stationTransferEntityRepository.findAll()
-        .map { stationTransferMapper.entityToDomain(it) }
+    private val graph = AsSynchronizedGraph(DefaultDirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java))
+
+    @PostConstruct
+    fun init() {
+        val allTransfers: List<MetroStationTransfer> = stationTransferEntityRepository.findAll()
+            .map { stationTransferMapper.entityToDomain(it) }
+
+        for (station in allStations.values) {
+            graph.addVertex(station.id)
+        }
+
+        for (transfer in allTransfers) {
+            val duration: Double = if (transfer.isCrosswalking) {
+                transfer.duration.toSeconds().toDouble() * 2
+            } else {
+                transfer.duration.toSeconds().toDouble()
+            }
+            graph.addEdge(transfer.startStation.id, transfer.finishStation.id)
+                ?.let { graph.setEdgeWeight(it, duration) }
+            graph.addEdge(transfer.finishStation.id, transfer.startStation.id)
+                ?.let { graph.setEdgeWeight(it, duration) }
+        }
+    }
 
     fun calculateTransfers(request: OrderTransfersRequestDTO): OrderTransfersResponseDTO {
         val result = calculateTransfers(request.startStation, request.finishStation)
@@ -49,24 +72,6 @@ class MetroTransfersService(
         startStationId: Long,
         finishStationId: Long
     ): OrderTransfers {
-        val graph = DefaultDirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java)
-
-        for (station in allStations.values) {
-            graph.addVertex(station.id)
-        }
-
-        for (transfer in allTransfers) {
-            val duration: Double = if (transfer.isCrosswalking) {
-                transfer.duration.toSeconds().toDouble() * 2
-            } else {
-                transfer.duration.toSeconds().toDouble()
-            }
-            graph.addEdge(transfer.startStation.id, transfer.finishStation.id)
-                ?.let { graph.setEdgeWeight(it, duration) }
-            graph.addEdge(transfer.finishStation.id, transfer.startStation.id)
-                ?.let { graph.setEdgeWeight(it, duration) }
-        }
-
         val pathfinder = DijkstraShortestPath(graph)
         val fullPath = pathfinder.getPath(startStationId, finishStationId)
         val pathEdges: List<DefaultWeightedEdge> = fullPath.edgeList

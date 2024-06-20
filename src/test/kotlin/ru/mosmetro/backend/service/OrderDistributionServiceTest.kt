@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.service
 
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,9 +40,6 @@ import kotlin.test.assertTrue
 
 @SpringBootTest
 class OrderDistributionServiceTest {
-
-    @Autowired
-    lateinit var subscriptionService: EntitySubscriptionService
 
     @Autowired
     lateinit var employeeMapper: EmployeeMapper
@@ -2323,7 +2321,7 @@ class OrderDistributionServiceTest {
     private fun mockGetEmployeeTImePlanDB(
         onDate: LocalDate,
         list: List<OrderTime>
-    ) {
+    ) = runBlocking {
         Mockito.`when`(timeListService.getOrderTimeList(onDate)).thenReturn(list)
     }
 
@@ -2338,8 +2336,6 @@ class OrderDistributionServiceTest {
 
 
     private fun getService() = OrderDistributionService(
-        subscriptionService,
-
         timeListService,
         orderService,
         metroTransfersService,
