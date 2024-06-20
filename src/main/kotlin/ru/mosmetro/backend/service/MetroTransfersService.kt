@@ -56,10 +56,15 @@ class MetroTransfersService(
         }
 
         for (transfer in allTransfers) {
+            val duration: Double = if (transfer.isCrosswalking) {
+                transfer.duration.toSeconds().toDouble() * 2
+            } else {
+                transfer.duration.toSeconds().toDouble()
+            }
             graph.addEdge(transfer.startStation.id, transfer.finishStation.id)
-                ?.let { graph.setEdgeWeight(it, transfer.duration.toSeconds().toDouble()) }
+                ?.let { graph.setEdgeWeight(it, duration) }
             graph.addEdge(transfer.finishStation.id, transfer.startStation.id)
-                ?.let { graph.setEdgeWeight(it, transfer.duration.toSeconds().toDouble()) }
+                ?.let { graph.setEdgeWeight(it, duration) }
         }
 
         val pathfinder = DijkstraShortestPath(graph)

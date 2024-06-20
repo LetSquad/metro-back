@@ -23,10 +23,20 @@ class MetroTransfersServiceTest {
             )
         )
 
+        assertEquals(response.duration, response.transfers.sumOf { it.duration })
+
         assertEquals("Улица Скобелевская", response.transfers.first().startStation.name)
-        assertEquals("Улица Старокачаловская", response.transfers.first().finishStation.name)
-        assertEquals("Октябрьская КРЛ", response.transfers.last().startStation.name)
+        assertEquals("Битцевский парк", response.transfers.first().finishStation.name)
+
+        val crosswalkings = response.transfers.filter { it.isCrosswalking }
+        assertEquals("Битцевский парк", crosswalkings.first().startStation.name)
+        assertEquals("Новоясеневская", crosswalkings.first().finishStation.name)
+        assertEquals(1, crosswalkings.size)
+
+        assertEquals("Новоясеневская", response.transfers.last().startStation.name)
         assertEquals("ВДНХ", response.transfers.last().finishStation.name)
+
+        assertEquals(3, response.transfers.size)
     }
 
     @Test
@@ -42,13 +52,14 @@ class MetroTransfersServiceTest {
 
         assertEquals("Аэропорт", response.transfers.first().startStation.name)
         assertEquals("Тверская", response.transfers.first().finishStation.name)
-        assertEquals("Чеховская", response.transfers.last().startStation.name)
-        assertEquals("Нагорная", response.transfers.last().finishStation.name)
 
         val crosswalkings = response.transfers.filter { it.isCrosswalking }
         assertEquals("Тверская", crosswalkings.first().startStation.name)
         assertEquals("Чеховская", crosswalkings.first().finishStation.name)
         assertEquals(1, crosswalkings.size)
+
+        assertEquals("Чеховская", response.transfers.last().startStation.name)
+        assertEquals("Нагорная", response.transfers.last().finishStation.name)
 
         assertEquals(3, response.transfers.size)
     }
