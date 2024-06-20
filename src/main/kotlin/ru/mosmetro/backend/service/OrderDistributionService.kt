@@ -67,7 +67,7 @@ class OrderDistributionService(
         // получаем все активные заявки в дату составления плана
         // сортируем заявки по времени
         val orderStartTime = LocalDateTime.of(planDate, METRO_TIME_START)
-        val orderFinishTime = LocalDateTime.of(planDate.plusDays(1), METRO_TIME_FINISH)
+        val orderFinishTime = LocalDateTime.of(planDate, METRO_TIME_FINISH)
         val passengerOrderList =
             orderService.getOrdersBetweenOrderDate(orderStartTime, orderFinishTime)
                 // TODO хак для распределения тестовых заявок

@@ -165,7 +165,7 @@ class TimeListService(
             result.add(
                 EmployeeShiftOrder(
                     timeStart = LocalDateTime.of(date, workFinish),
-                    timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
+                    timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
                     actionType = TimeListActionType.NON_WORKING,
                     order = null
                 )
@@ -184,7 +184,7 @@ class TimeListService(
         date: LocalDate
     ): List<EmployeeShiftOrder> {
         val result: MutableList<EmployeeShiftOrder> = mutableListOf()
-        val endWork = if (workStart > workFinish) LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH) else LocalDateTime.of(date, workFinish)
+        val endWork = if (workStart > workFinish) LocalDateTime.of(date, METRO_TIME_FINISH) else LocalDateTime.of(date, workFinish)
         actions
             .sortedBy { it.timeStart }
             .let {

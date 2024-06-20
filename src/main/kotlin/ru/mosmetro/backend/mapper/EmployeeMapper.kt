@@ -40,7 +40,7 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        shift = mapper.workStart.truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.truncatedTo(
+        shift = mapper.workStart.plusHours(3).truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.plusHours(3).truncatedTo(
             ChronoUnit.MINUTES
         ).toString(),
         workPhone = mapper.workPhone,
@@ -57,7 +57,7 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        shift = mapper.workStart.truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.truncatedTo(
+        shift = mapper.workStart.plusHours(3).truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.plusHours(3).truncatedTo(
             ChronoUnit.MINUTES
         ).toString(),
         workPhone = mapper.workPhone,
@@ -75,8 +75,8 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()),
-        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()),
+        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()).minusHours(3),
+        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()).minusHours(3),
         shiftType = mapper.shift,
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
@@ -92,8 +92,8 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()),
-        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()),
+        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()).minusHours(3),
+        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()).minusHours(3),
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
