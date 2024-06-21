@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
+import ru.mosmetro.backend.model.dto.passenger.PassangerFilterRequestDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
@@ -30,8 +31,8 @@ class PassengerController(
         summary = "Получение всех пассажиров"
     )
     @GetMapping
-    suspend fun getPassengers(): ListWithTotal<PassengerDTO> {
-        return passengerService.getPassengers()
+    suspend fun getPassengers(filterDto: PassangerFilterRequestDTO): ListWithTotal<PassengerDTO> {
+        return passengerService.getPassengers(filterDto)
     }
 
     @Operation(
