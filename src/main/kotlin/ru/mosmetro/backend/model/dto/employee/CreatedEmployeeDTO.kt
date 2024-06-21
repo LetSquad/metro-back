@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import ru.mosmetro.backend.model.enums.EmployeeRoleType
 import ru.mosmetro.backend.model.enums.SexType
 
-data class CurrentEmployeeDTO(
+data class CreatedEmployeeDTO(
     @Schema(description = "Идентификатор рабочего")
     val id: Long?,
     @Schema(description = "роль")
@@ -29,8 +29,6 @@ data class CurrentEmployeeDTO(
     val lightDuties: Boolean,
     @Schema(description = "Должность")
     val rank: EmployeeRankDTO,
-    @Schema(description = "Логин пользователя")
-    val login: String?,
-    @Schema(description = "Является ли пароль временным")
-    val isPasswordTemp: Boolean
+    @Schema(description = "Временный пароль пользователя")
+    val password: String?,
 )

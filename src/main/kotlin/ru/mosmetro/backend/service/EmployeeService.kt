@@ -1,6 +1,11 @@
 package ru.mosmetro.backend.service
 
 import kotlinx.coroutines.reactor.awaitSingle
+import org.passay.AllowedCharacterRule.ERROR_CODE
+import org.passay.CharacterData
+import org.passay.CharacterRule
+import org.passay.EnglishCharacterData
+import org.passay.PasswordGenerator
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -11,8 +16,11 @@ import ru.mosmetro.backend.mapper.EmployeeRankMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftMapper
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
+import ru.mosmetro.backend.model.dto.employee.CreatedEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.CurrentEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeeFilterRequestDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeePasswordResetRequestDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
 import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
@@ -25,6 +33,7 @@ import ru.mosmetro.backend.repository.MetroUserEntityRepository
 import ru.mosmetro.backend.service.jwt.RefreshTokenService
 import ru.mosmetro.backend.util.executeSuspended
 import ru.mosmetro.backend.util.jpaContext
+
 
 @Service
 class EmployeeService(
@@ -47,8 +56,23 @@ class EmployeeService(
      * @return список сущностей EmployeeDTO в которых предоставлена информация о рабочих
      *
      * */
-    suspend fun getEmployees(): ListWithTotal<EmployeeDTO> {
+    suspend fun getEmployees(request: EmployeeFilterRequestDTO): ListWithTotal<EmployeeDTO> {
         val employeeDTOList = jpaContext { employeeEntityRepository.findAll() }
+            .filter { entity ->
+                if (request.firstName != null && request.firstName != entity.firstName) {
+                    return@filter false
+                }
+                if (request.lastName != null && request.lastName != entity.lastName) {
+                    return@filter false
+                }
+                if (request.phone != null && request.phone != entity.personalPhone) {
+                    return@filter false
+                }
+                if (request.lightDuties != null && request.lightDuties != entity.lightDuties) {
+                    return@filter false
+                }
+                return@filter true
+            }
             .map { employeeMapper.entityToDomain(it) }
             .map { employeeMapper.domainToDto(it) }
         return ListWithTotal(employeeDTOList.size, employeeDTOList)
@@ -108,11 +132,11 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
-    suspend fun getEmployeeById(id: Long): EntityForEdit<EmployeeDTO> {
-        val employee: EmployeeDTO = jpaContext { employeeEntityRepository.findById(id) }
+    suspend fun getEmployeeById(id: Long): EntityForEdit<CurrentEmployeeDTO> {
+        val employee: CurrentEmployeeDTO = jpaContext { employeeEntityRepository.findById(id) }
             .orElseThrow { EntityNotFoundException(id.toString()) }
             .let { employeeMapper.entityToDomain(it) }
-            .let { employeeMapper.domainToDto(it) }
+            .let { employeeMapper.domainToCurrentDto(it) }
 
         return EntityForEdit(
             isLockedForEdit = lockService.checkEmployeeLock(id),
@@ -128,20 +152,22 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
-    suspend fun createEmployee(newEmployeeDTO: NewEmployeeDTO): EmployeeDTO = transactionTemplate.executeSuspended {
-        val employeeRank = employeeRankEntityRepository.findById(newEmployeeDTO.rankCode)
-            .orElseThrow { EntityNotFoundException(newEmployeeDTO.rankCode) }
+    suspend fun createEmployee(newEmployeeDTO: NewEmployeeDTO): CreatedEmployeeDTO =
+        transactionTemplate.executeSuspended {
+            val employeeRank = employeeRankEntityRepository.findById(newEmployeeDTO.rank)
+                .orElseThrow { EntityNotFoundException(newEmployeeDTO.rank) }
             .let { employeeRankMapper.entityToDomain(it) }
-            .let { employeeRankMapper.domainToDto(it) }
 
+            val password = generatePassayPassword()
         val userEntity = metroUserEntityRepository.save(
             MetroUserEntity(
                 null,
                 newEmployeeDTO.workPhone,
-                passwordEncoder.encode("temp"),
+                passwordEncoder.encode(password),
                 true
             )
         )
+            metroUserEntityRepository.flush()
 
         refreshTokenService.initUser(newEmployeeDTO.workPhone)
 
@@ -150,7 +176,7 @@ class EmployeeService(
             .let { employeeMapper.domainToEntity(it, userEntity) }
             .let { employeeEntityRepository.save(it) }
             .let { employeeMapper.entityToDomain(it) }
-            .let { employeeMapper.domainToDto(it) }
+            .let { employeeMapper.domainToCreatedDto(it, password) }
     }
 
     /**
@@ -168,7 +194,6 @@ class EmployeeService(
 
         val employeeRankDTO = employeeEntity.rank
             .let { employeeRankMapper.entityToDomain(it) }
-            .let { employeeRankMapper.domainToDto(it) }
 
         return updateEmployeeDTO
             .let { employeeMapper.dtoToDomain(updateEmployeeDTO, id, employeeRankDTO) }
@@ -195,7 +220,41 @@ class EmployeeService(
      *
      *
      * */
-    fun resetEmployeePassword() {
+    fun resetEmployeePassword(id: Long, employeePasswordResetRequestDTO: EmployeePasswordResetRequestDTO) {
         TODO()
+    }
+
+    private fun generatePassayPassword(): String {
+        val gen: PasswordGenerator = PasswordGenerator()
+        val lowerCaseChars: CharacterData = EnglishCharacterData.LowerCase
+        val lowerCaseRule: CharacterRule = CharacterRule(lowerCaseChars)
+        lowerCaseRule.numberOfCharacters = 2
+
+        val upperCaseChars: CharacterData = EnglishCharacterData.UpperCase
+        val upperCaseRule: CharacterRule = CharacterRule(upperCaseChars)
+        upperCaseRule.numberOfCharacters = 2
+
+        val digitChars: CharacterData = EnglishCharacterData.Digit
+        val digitRule: CharacterRule = CharacterRule(digitChars)
+        digitRule.numberOfCharacters = 2
+
+        val specialChars: CharacterData = object : CharacterData {
+            override fun getErrorCode(): String {
+                return ERROR_CODE
+            }
+
+            override fun getCharacters(): String {
+                return "!@#$%^&*()_+"
+            }
+        }
+
+        val splCharRule = CharacterRule(specialChars)
+        splCharRule.numberOfCharacters = 2
+
+        val password: String = gen.generatePassword(
+            10, splCharRule, lowerCaseRule,
+            upperCaseRule, digitRule
+        )
+        return password
     }
 }

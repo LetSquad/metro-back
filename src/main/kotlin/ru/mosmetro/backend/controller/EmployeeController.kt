@@ -3,6 +3,7 @@ package ru.mosmetro.backend.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -10,11 +11,15 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
+import ru.mosmetro.backend.model.dto.employee.CreatedEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.CurrentEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeeFilterRequestDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeePasswordResetRequestDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
 import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
@@ -27,13 +32,12 @@ import ru.mosmetro.backend.service.EmployeeService
 class EmployeeController(
     private val employeeService: EmployeeService
 ) {
-
     @Operation(
         summary = "Получение всех сотрудников"
     )
     @GetMapping
-    suspend fun getEmployees(): ListWithTotal<EmployeeDTO> {
-        return employeeService.getEmployees()
+    suspend fun getEmployees(request: EmployeeFilterRequestDTO): ListWithTotal<EmployeeDTO> {
+        return employeeService.getEmployees(request)
     }
 
     @Operation(
@@ -42,7 +46,7 @@ class EmployeeController(
     @GetMapping("{id}")
     suspend fun getEmployeeById(
         @Parameter(description = "ID работника") @PathVariable id: Long
-    ): EntityForEdit<EmployeeDTO> {
+    ): EntityForEdit<CurrentEmployeeDTO> {
         return employeeService.getEmployeeById(id)
     }
 
@@ -58,7 +62,7 @@ class EmployeeController(
         summary = "Создание нового работника"
     )
     @PostMapping
-    suspend fun createEmployee(@RequestBody newEmployeeDTO: NewEmployeeDTO): EmployeeDTO {
+    suspend fun createEmployee(@RequestBody newEmployeeDTO: NewEmployeeDTO): CreatedEmployeeDTO {
         return employeeService.createEmployee(newEmployeeDTO)
     }
 
@@ -66,8 +70,12 @@ class EmployeeController(
         summary = "Обновление пароля для работника"
     )
     @PostMapping("{id}/reset-password")
-    fun resetEmployeePassword(@Parameter(description = "ID работника") @PathVariable id: Long) {
-        employeeService.resetEmployeePassword()
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    fun resetEmployeePassword(
+        @Parameter(description = "ID работника") @PathVariable id: Long,
+        @RequestBody employeePasswordResetRequestDTO: EmployeePasswordResetRequestDTO
+    ) {
+        employeeService.resetEmployeePassword(id, employeePasswordResetRequestDTO)
     }
 
     @Operation(
