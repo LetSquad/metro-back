@@ -16,6 +16,8 @@ data class NewEmployeeDTO(
     val sex: SexType,
     @Schema(description = "Рабочий телефон")
     val workPhone: String,
+    @Schema(description = "Логин сотрудника")
+    val login: String,
     @Schema(description = "Личный телефон")
     val personalPhone: String,
     @Schema(description = "Тип смены", pattern = "hh:mm-hh:mm")

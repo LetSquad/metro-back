@@ -108,7 +108,7 @@ class EmployeeMapper(
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRank,
-        login = mapper.workPhone,
+        login = mapper.login,
         isPasswordTemp = true
     )
 
