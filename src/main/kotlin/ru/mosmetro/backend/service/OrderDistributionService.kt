@@ -15,6 +15,7 @@ import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
+import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
@@ -68,8 +69,7 @@ class OrderDistributionService(
         val orderFinishTime = LocalDateTime.of(planDate, METRO_TIME_FINISH)
         val passengerOrderList =
             orderService.getOrdersBetweenOrderDate(orderStartTime, orderFinishTime)
-                // TODO хак для распределения тестовых заявок
-//                .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
+                .filter { it.orderStatus.code != OrderStatusType.CANCELED && it.orderStatus.code != OrderStatusType.REJECTED }
                 .sortedWith(compareBy({ it.orderTime }, { it.createdAt }))
 
         if (guessBreakTime) {
