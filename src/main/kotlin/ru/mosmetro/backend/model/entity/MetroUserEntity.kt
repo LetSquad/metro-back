@@ -21,8 +21,8 @@ data class MetroUserEntity(
     val login: String,
 
     @Column(name = "password", length = Integer.MAX_VALUE)
-    val password: String,
+    var password: String,
 
     @Column(name = "is_password_temporary")
-    val isPasswordTemporary: Boolean
+    var isPasswordTemporary: Boolean
 )

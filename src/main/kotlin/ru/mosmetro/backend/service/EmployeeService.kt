@@ -1,11 +1,6 @@
 package ru.mosmetro.backend.service
 
 import kotlinx.coroutines.reactor.awaitSingle
-import org.passay.AllowedCharacterRule.ERROR_CODE
-import org.passay.CharacterData
-import org.passay.CharacterRule
-import org.passay.EnglishCharacterData
-import org.passay.PasswordGenerator
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -47,7 +42,8 @@ class EmployeeService(
     private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
     private val metroUserEntityRepository: MetroUserEntityRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val transactionTemplate: TransactionTemplate
+    private val transactionTemplate: TransactionTemplate,
+    private val passwordGenerationService: PasswordGenerationService,
 ) {
     /**
      *
@@ -158,7 +154,7 @@ class EmployeeService(
                 .orElseThrow { EntityNotFoundException(newEmployeeDTO.rank) }
             .let { employeeRankMapper.entityToDomain(it) }
 
-            val password = generatePassayPassword()
+            val password = passwordGenerationService.generateTempPassword()
         val userEntity = metroUserEntityRepository.save(
             MetroUserEntity(
                 null,
@@ -216,45 +212,26 @@ class EmployeeService(
 
     /**
      *
-     * Метод обновляет пароль на временный для сотрудника
+     * Метод обновляет временный пароль на постоянный для сотрудника
      *
+     * @param dto - модель с новым паролем
      *
      * */
-    fun resetEmployeePassword(id: Long, employeePasswordResetRequestDTO: EmployeePasswordResetRequestDTO) {
-        TODO()
+    suspend fun resetEmployeePassword(dto: EmployeePasswordResetRequestDTO) {
+        val login: String = ReactiveSecurityContextHolder.getContext()
+            .awaitSingle()
+            .authentication
+            .principal as String
+
+        val encodePass = passwordEncoder.encode(dto.newPassword)
+        jpaContext { metroUserEntityRepository.findByLogin(login) }
+            .orElseThrow { EntityNotFoundException(login) }
+            .let {
+                it.password = encodePass
+                it.isPasswordTemporary = false
+                return@let it
+            }
+            .let { metroUserEntityRepository.save(it) }
     }
 
-    private fun generatePassayPassword(): String {
-        val gen: PasswordGenerator = PasswordGenerator()
-        val lowerCaseChars: CharacterData = EnglishCharacterData.LowerCase
-        val lowerCaseRule: CharacterRule = CharacterRule(lowerCaseChars)
-        lowerCaseRule.numberOfCharacters = 2
-
-        val upperCaseChars: CharacterData = EnglishCharacterData.UpperCase
-        val upperCaseRule: CharacterRule = CharacterRule(upperCaseChars)
-        upperCaseRule.numberOfCharacters = 2
-
-        val digitChars: CharacterData = EnglishCharacterData.Digit
-        val digitRule: CharacterRule = CharacterRule(digitChars)
-        digitRule.numberOfCharacters = 2
-
-        val specialChars: CharacterData = object : CharacterData {
-            override fun getErrorCode(): String {
-                return ERROR_CODE
-            }
-
-            override fun getCharacters(): String {
-                return "!@#$%^&*()_+"
-            }
-        }
-
-        val splCharRule = CharacterRule(specialChars)
-        splCharRule.numberOfCharacters = 2
-
-        val password: String = gen.generatePassword(
-            10, splCharRule, lowerCaseRule,
-            upperCaseRule, digitRule
-        )
-        return password
-    }
 }

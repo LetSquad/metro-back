@@ -67,15 +67,14 @@ class EmployeeController(
     }
 
     @Operation(
-        summary = "Обновление пароля для работника"
+        summary = "Сброс временного пароля для работника"
     )
-    @PostMapping("{id}/reset-password")
+    @PostMapping("reset-password")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
-    fun resetEmployeePassword(
-        @Parameter(description = "ID работника") @PathVariable id: Long,
+    suspend fun resetEmployeePassword(
         @RequestBody employeePasswordResetRequestDTO: EmployeePasswordResetRequestDTO
     ) {
-        employeeService.resetEmployeePassword(id, employeePasswordResetRequestDTO)
+        employeeService.resetEmployeePassword(employeePasswordResetRequestDTO)
     }
 
     @Operation(
