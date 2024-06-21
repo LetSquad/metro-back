@@ -301,7 +301,7 @@ class OrderDistributionService(
                 // если занят
                 } else {
                     val planBefore = it.timePlan
-                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) < order.orderTime }
+                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.orderTime }
                         .filter { it.order != null }
                         .sortedBy { it.timeStart }
                     // по закрепленному плану свободен
