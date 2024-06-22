@@ -1,15 +1,19 @@
 package ru.mosmetro.backend.service
 
 import org.springframework.stereotype.Service
+import ru.mosmetro.backend.exception.EntityNotFoundException
 import ru.mosmetro.backend.exception.NoSuchPassengerException
 import ru.mosmetro.backend.mapper.PassengerCategoryMapper
 import ru.mosmetro.backend.mapper.PassengerMapper
+import ru.mosmetro.backend.mapper.PassengerPhoneMapper
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.passenger.NewPassengerDTO
+import ru.mosmetro.backend.model.dto.passenger.PassangerFilterRequestDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerCategoryDTO
 import ru.mosmetro.backend.model.dto.passenger.PassengerDTO
 import ru.mosmetro.backend.model.dto.passenger.UpdatePassengerDTO
+import ru.mosmetro.backend.model.entity.PassengerPhoneEntity
 import ru.mosmetro.backend.repository.PassengerCategoryEntityRepository
 import ru.mosmetro.backend.repository.PassengerEntityRepository
 import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
@@ -19,6 +23,7 @@ import ru.mosmetro.backend.util.jpaContext
 class PassengerService(
     private val passengerMapper: PassengerMapper,
     private val passengerCategoryMapper: PassengerCategoryMapper,
+    private val passengerPhoneMapper: PassengerPhoneMapper,
     private val lockService: EntityLockService,
     private val subscriptionService: EntitySubscriptionService,
     private val passengerEntityRepository: PassengerEntityRepository,
@@ -26,19 +31,37 @@ class PassengerService(
     private val passengerCategoryEntityRepository: PassengerCategoryEntityRepository
 ) {
 
+    val passengerPhoneCache: MutableMap<Long?, List<PassengerPhoneEntity>> =
+        passengerPhoneEntityRepository.findAll()
+            .groupBy({ it.passengerId!! }, { it })
+            .toMutableMap()
+
     /**
      *
      * Метод возвращает список всех пассажиров в системе
      *
      * */
-    suspend fun getPassengers(): ListWithTotal<PassengerDTO> {
-        val passengerPhones = passengerPhoneEntityRepository.findAll()
-            .groupBy({ it.passenger?.id }, { it })
+    suspend fun getPassengers(request: PassangerFilterRequestDTO): ListWithTotal<PassengerDTO> {
         val passengerDTOList = jpaContext { passengerEntityRepository.findAll() }
             .map {
-                val passengerPhones = passengerPhones.getOrElse(it.id) { emptyList() }
+                val passengerPhones = passengerPhoneCache.getOrElse(it.id) { emptyList() }
                     .toSet()
                 passengerMapper.entityToDomain(it, passengerPhones)
+            }
+            .filter { entity ->
+                if (request.firstName != null && request.firstName != entity.firstName) {
+                    return@filter false
+                }
+                if (request.lastName != null && request.lastName != entity.lastName) {
+                    return@filter false
+                }
+                if (request.phone != null && entity.phones.all { it.phone != request.phone }) {
+                    return@filter false
+                }
+                if (request.categories != null && request.categories != entity.category.code.name) {
+                    return@filter false
+                }
+                return@filter true
             }
             .map { passengerMapper.domainToDto(it) }
         return ListWithTotal(passengerDTOList.size, passengerDTOList)
@@ -96,13 +119,33 @@ class PassengerService(
      *
      * */
     suspend fun createPassenger(newPassengerDTO: NewPassengerDTO): PassengerDTO {
-        return newPassengerDTO
-            .let { passengerMapper.dtoToDomain(it) }
+        val passangerCategory = jpaContext { passengerCategoryEntityRepository.findByCode(newPassengerDTO.category) }
+            .orElseThrow { EntityNotFoundException(newPassengerDTO.category) }
+            .let { passengerCategoryMapper.entityToDomain(it) }
+
+        val passanger = newPassengerDTO
+            .let { passengerMapper.dtoToDomain(it, passangerCategory) }
             .let { passengerMapper.domainToEntity(it) }
             .let { jpaContext { passengerEntityRepository.save(it) } }
+
+        val phones = newPassengerDTO.phones
+            .map { passengerPhoneMapper.dtoToDomain(it) }
+            .map { passengerPhoneMapper.domainToNewEntity(it, passanger) }
+            .onEach { passengerPhoneEntityRepository.save(it) }
+            .also { updatePhoneCache(it) }
+
+        return passanger
             .also { subscriptionService.notifyPassengerUpdate() }
-            .let { passengerMapper.entityToDomain(it, emptySet()) }
+            .let { passengerMapper.entityToDomain(it, phones.toSet()) }
             .let { passengerMapper.domainToDto(it) }
+    }
+
+    suspend fun updatePhoneCache(
+        phones: List<PassengerPhoneEntity>
+    ) {
+        phones.let {
+            it.forEach { phoneEntity -> passengerPhoneCache[phoneEntity.passenger!!.id] = it }
+        }
     }
 
     /**
@@ -117,12 +160,24 @@ class PassengerService(
         val passengerEntity = jpaContext { passengerEntityRepository.findById(id) }
             .orElseThrow { NoSuchPassengerException(id) }
 
-        return updatePassengerDTO
-            .let { passengerMapper.dtoToDomain(it, id, passengerEntity.createdAt) }
+        val passangerCategory = jpaContext { passengerCategoryEntityRepository.findByCode(updatePassengerDTO.category) }
+            .orElseThrow { EntityNotFoundException(updatePassengerDTO.category) }
+            .let { passengerCategoryMapper.entityToDomain(it) }
+
+        val passanger = updatePassengerDTO
+            .let { passengerMapper.dtoToDomain(it, id, passengerEntity.createdAt, passangerCategory) }
             .let { passengerMapper.domainToEntity(it) }
             .let { passengerEntityRepository.save(it) }
+
+        val phones = updatePassengerDTO.phones
+            .map { passengerPhoneMapper.dtoToDomain(it) }
+            .map { passengerPhoneMapper.domainToNewEntity(it, passanger) }
+            .onEach { passengerPhoneEntityRepository.save(it) }
+            .also { updatePhoneCache(it) }
+
+        return passanger
             .also { subscriptionService.notifyPassengerUpdate() }
-            .let { passengerMapper.entityToDomain(it, emptySet()) }
+            .let { passengerMapper.entityToDomain(it, phones.toSet()) }
             .let { passengerMapper.domainToDto(it) }
     }
 

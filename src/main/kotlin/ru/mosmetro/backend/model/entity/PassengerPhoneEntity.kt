@@ -29,4 +29,8 @@ data class PassengerPhoneEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passenger_id")
     val passenger: PassengerEntity?
-)
+) {
+
+    @Column(name = "passenger_id", insertable = false, updatable = false)
+    var passengerId: Long? = null
+}

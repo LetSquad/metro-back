@@ -1,9 +1,6 @@
 package ru.mosmetro.backend.service
 
 import jakarta.persistence.EntityNotFoundException
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.exception.NoSuchOrderException
 import ru.mosmetro.backend.mapper.MetroStationMapper
@@ -12,6 +9,7 @@ import ru.mosmetro.backend.mapper.PassengerMapper
 import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
+import ru.mosmetro.backend.model.dto.metro.MetroStationTransferDTO
 import ru.mosmetro.backend.model.dto.order.NewPassengerOrderDTO
 import ru.mosmetro.backend.model.dto.order.OrderFilterRequestDTO
 import ru.mosmetro.backend.model.dto.order.PassengerOrderDTO
@@ -24,6 +22,9 @@ import ru.mosmetro.backend.repository.OrderStatusEntityRepository
 import ru.mosmetro.backend.repository.PassengerOrderEntityRepository
 import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
 import ru.mosmetro.backend.util.jpaContext
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 class OrderService(
@@ -37,7 +38,7 @@ class OrderService(
     private val passengerService: PassengerService,
     private val passengerMapper: PassengerMapper,
     private val metroService: MetroService,
-    private val metroStationMapper: MetroStationMapper
+    private val metroStationMapper: MetroStationMapper,
 ) {
 
     /**
@@ -54,11 +55,9 @@ class OrderService(
             .atStartOfDay()
             .toInstant(ZoneOffset.UTC)
 
-        val passengerPhones = passengerPhoneEntityRepository.findAll()
-            .groupBy({ it.passenger?.id }, { it })
         val passengerOrders = jpaContext { passengerOrderEntityRepository.findAllByOrderTimeBetween(dateFrom, dateTo) }
             .map {
-                val passengerPhones = passengerPhones.getOrElse(it.passenger.id) { emptyList() }
+                val passengerPhones = passengerService.passengerPhoneCache.getOrElse(it.passenger.id) { emptyList() }
                     .toSet()
                 orderMapper.entityToDomain(it, passengerPhones)
             }
@@ -170,9 +169,15 @@ class OrderService(
             .let { metroStationMapper.dtoToDomain(it) }
         val finishStation = metroService.getMetroStationById(newPassengerOrderDTO.finishStation)
             .let { metroStationMapper.dtoToDomain(it) }
+        val transfers = newPassengerOrderDTO.transfers.map { MetroStationTransferDTO(
+            metroService.getMetroStationById(it.startStation),
+            metroService.getMetroStationById(it.finishStation),
+            it.duration,
+            it.isCrosswalking
+        ) }
 
         return newPassengerOrderDTO
-            .let { orderMapper.dtoToDomain(it, startStation, finishStation, passenger) }
+            .let { orderMapper.dtoToDomain(it, startStation, finishStation, passenger, transfers) }
             .let {
                 orderMapper.domainToEntity(
                     it, orderStatusEntity, passengerMapper.domainToEntity(passenger),
@@ -213,6 +218,13 @@ class OrderService(
         val finishStation = metroService.getMetroStationById(updatedPassengerOrderDTO.finishStation)
             .let { metroStationMapper.dtoToDomain(it) }
 
+        val transfers = updatedPassengerOrderDTO.transfers.map { MetroStationTransferDTO(
+            metroService.getMetroStationById(it.startStation),
+            metroService.getMetroStationById(it.finishStation),
+            it.duration,
+            it.isCrosswalking
+        ) }
+
         return updatedPassengerOrderDTO
             .let {
                 orderMapper.dtoToDomain(
@@ -221,7 +233,8 @@ class OrderService(
                     id,
                     startStation,
                     finishStation,
-                    passenger
+                    passenger,
+                    transfers
                 )
             }
             .let {

@@ -9,6 +9,7 @@ import ru.mosmetro.backend.model.entity.PassengerPhoneEntity
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_MOSCOW
 import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_UTC
+import java.time.ZoneOffset
 
 @Component
 class EmployeeShiftOrderMapper(
@@ -24,8 +25,8 @@ class EmployeeShiftOrderMapper(
     )
 
     fun domainToDto(mapper: EmployeeShiftOrder) = EmployeeShiftOrderDTO(
-            timeStart = mapper.timeStart.toInstant(TIME_ZONE_MOSCOW),
-            timeEnd = mapper.timeFinish.toInstant(TIME_ZONE_MOSCOW),
+            timeStart = mapper.timeStart.toInstant(ZoneOffset.UTC),
+            timeEnd = mapper.timeFinish.toInstant(ZoneOffset.UTC),
             actionType = mapper.actionType,
             order = mapper.order?.let { orderMapper.domainToDto(it) }
     )

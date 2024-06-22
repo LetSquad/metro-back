@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.service
 
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftOrderMapper
@@ -14,6 +15,7 @@ import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
+import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
@@ -28,7 +30,6 @@ import java.time.ZoneOffset
 
 @Service
 class OrderDistributionService(
-    private val subscriptionService: EntitySubscriptionService,
     private val timeListService: TimeListService,
     private val orderService: OrderService,
     private val metroTransfersService: MetroTransfersService,
@@ -39,7 +40,7 @@ class OrderDistributionService(
     private val employeeShiftOrderMapper: EmployeeShiftOrderMapper
 ) {
 
-    fun calculateOrderDistribution(
+    suspend fun calculateOrderDistribution(
         planDate: LocalDate
     ): ListWithTotal<OrderTimeDTO> {
         val result: OrderTimeListDTO = calculateOrderDistribution(planDate, true, true)
@@ -50,16 +51,14 @@ class OrderDistributionService(
     fun calculateOrderDistributionForTest(
         planDate: LocalDate
     ): OrderTimeListDTO {
-        return calculateOrderDistribution(planDate, false, false)
+        return runBlocking { calculateOrderDistribution(planDate, false, false) }
     }
 
-    fun calculateOrderDistribution(
+    suspend fun calculateOrderDistribution(
         planDate: LocalDate,
         guessBreakTime: Boolean,
         addTransferPeriod: Boolean,
     ): OrderTimeListDTO {
-        subscriptionService.notifyOrderUpdate()
-
         // получаем всех занятых сотрудников исходя из их графика работы
         // создаем на всех лист занятости
         val employeeTimePlanList: List<OrderTime> = timeListService.getOrderTimeList(planDate)
@@ -67,11 +66,10 @@ class OrderDistributionService(
         // получаем все активные заявки в дату составления плана
         // сортируем заявки по времени
         val orderStartTime = LocalDateTime.of(planDate, METRO_TIME_START)
-        val orderFinishTime = LocalDateTime.of(planDate.plusDays(1), METRO_TIME_FINISH)
+        val orderFinishTime = LocalDateTime.of(planDate, METRO_TIME_FINISH)
         val passengerOrderList =
             orderService.getOrdersBetweenOrderDate(orderStartTime, orderFinishTime)
-                // TODO хак для распределения тестовых заявок
-//                .filter { it.orderStatus.code == OrderStatusType.WAITING_LIST }
+                .filter { it.orderStatus.code != OrderStatusType.CANCELED && it.orderStatus.code != OrderStatusType.REJECTED }
                 .sortedWith(compareBy({ it.orderTime }, { it.createdAt }))
 
         if (guessBreakTime) {
@@ -303,7 +301,7 @@ class OrderDistributionService(
                 // если занят
                 } else {
                     val planBefore = it.timePlan
-                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) < order.orderTime }
+                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.orderTime }
                         .filter { it.order != null }
                         .sortedBy { it.timeStart }
                     // по закрепленному плану свободен

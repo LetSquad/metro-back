@@ -4,3 +4,4 @@ target
 *.iml
 .flattened-pom.xml
 /.jpb/
+/src/main/resources/public

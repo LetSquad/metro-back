@@ -122,7 +122,7 @@ class OrderController(
         summary = "Распределение заявок"
     )
     @PostMapping("/distribution")
-    fun calculateOrderDistribution(): ListWithTotal<OrderTimeDTO> {
+    suspend fun calculateOrderDistribution(): ListWithTotal<OrderTimeDTO> {
         val tomorrowDate = LocalDate.now().plusDays(1)
         return distributionService.calculateOrderDistribution(tomorrowDate)
     }

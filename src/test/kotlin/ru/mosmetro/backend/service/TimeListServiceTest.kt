@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.service
 
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -167,7 +168,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrder(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
                         ),
@@ -213,7 +214,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrder(
                             timeStart = LocalDateTime.of(date, LocalTime.of(22, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
                         ),
@@ -305,7 +306,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrder(
                             timeStart = LocalDateTime.of(date.plusDays(1), LocalTime.of(0, 30)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
                             actionType = TimeListActionType.DOWNTIME,
                             order = null
                         ),
@@ -411,7 +412,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -483,7 +484,7 @@ class TimeListServiceTest {
             )
 
         // act
-        val actualOrdersTime: List<OrderTime> = service.getOrderTimeList(date)
+        val actualOrdersTime: List<OrderTime> = runBlocking { service.getOrderTimeList(date) }
 
         // assert
         val expectedOrdersTime: List<OrderTime> =

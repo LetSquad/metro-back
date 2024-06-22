@@ -4,18 +4,20 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import org.springframework.stereotype.Component
 import ru.mosmetro.backend.model.domain.Employee
+import ru.mosmetro.backend.model.domain.EmployeeRank
+import ru.mosmetro.backend.model.dto.employee.CreatedEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.CurrentEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
-import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.UpdateEmployeeDTO
 import ru.mosmetro.backend.model.entity.EmployeeEntity
 import ru.mosmetro.backend.model.entity.MetroUserEntity
+import ru.mosmetro.backend.model.enums.EmployeeRoleType
 import ru.mosmetro.backend.model.enums.SexType
 
 @Component
 class EmployeeMapper(
-        private val employeeRankMapper: EmployeeRankMapper
+    private val employeeRankMapper: EmployeeRankMapper
 ) {
     fun entityToDomain(mapper: EmployeeEntity) = Employee(
         id = mapper.id,
@@ -31,7 +33,8 @@ class EmployeeMapper(
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRankMapper.entityToDomain(mapper.rank),
-        login = mapper.user.login
+        login = mapper.user.login,
+        isPasswordTemp = mapper.user.isPasswordTemporary
     )
 
     fun domainToDto(mapper: Employee) = EmployeeDTO(
@@ -40,7 +43,8 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        shift = mapper.workStart.truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.truncatedTo(
+        shift = mapper.workStart.plusHours(3).truncatedTo(ChronoUnit.MINUTES)
+            .toString() + "-" + mapper.workFinish.plusHours(3).truncatedTo(
             ChronoUnit.MINUTES
         ).toString(),
         workPhone = mapper.workPhone,
@@ -48,7 +52,7 @@ class EmployeeMapper(
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRankMapper.domainToDto(mapper.rank),
-        employeeRole = employeeRankMapper.domainToDto(mapper.rank).role
+        employeeRole = EmployeeRoleType.valueOf(mapper.rank.role)
     )
 
     fun domainToCurrentDto(mapper: Employee) = CurrentEmployeeDTO(
@@ -57,7 +61,8 @@ class EmployeeMapper(
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        shift = mapper.workStart.truncatedTo(ChronoUnit.MINUTES).toString() + "-" + mapper.workFinish.truncatedTo(
+        shift = mapper.workStart.plusHours(3).truncatedTo(ChronoUnit.MINUTES)
+            .toString() + "-" + mapper.workFinish.plusHours(3).truncatedTo(
             ChronoUnit.MINUTES
         ).toString(),
         workPhone = mapper.workPhone,
@@ -65,42 +70,65 @@ class EmployeeMapper(
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRankMapper.domainToDto(mapper.rank),
-        employeeRole = employeeRankMapper.domainToDto(mapper.rank).role,
+        employeeRole = EmployeeRoleType.valueOf(mapper.rank.role),
+        login = mapper.login,
+        isPasswordTemp = mapper.isPasswordTemp
+    )
+
+    fun domainToCreatedDto(mapper: Employee, password: String) = CreatedEmployeeDTO(
+        id = mapper.id,
+        firstName = mapper.firstName,
+        lastName = mapper.lastName,
+        middleName = mapper.middleName,
+        sex = mapper.sex,
+        shift = mapper.workStart.plusHours(3).truncatedTo(ChronoUnit.MINUTES)
+            .toString() + "-" + mapper.workFinish.plusHours(3).truncatedTo(
+            ChronoUnit.MINUTES
+        ).toString(),
+        workPhone = mapper.workPhone,
+        personalPhone = mapper.personalPhone,
+        employeeNumber = mapper.employeeNumber,
+        lightDuties = mapper.lightDuties,
+        rank = employeeRankMapper.domainToDto(mapper.rank),
+        employeeRole = EmployeeRoleType.valueOf(mapper.rank.role),
+        password = password,
         login = mapper.login
     )
 
-    fun dtoToDomain(mapper: NewEmployeeDTO, employeeRankDTO: EmployeeRankDTO) = Employee(
+    fun dtoToDomain(mapper: NewEmployeeDTO, employeeRank: EmployeeRank) = Employee(
         id = null,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()),
-        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()),
+        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()).minusHours(3),
+        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()).minusHours(3),
         shiftType = mapper.shift,
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
-        rank = employeeRankMapper.dtoToDomain(employeeRankDTO),
-        login = mapper.workPhone
+        rank = employeeRank,
+        login = mapper.workPhone,
+        isPasswordTemp = true
     )
 
-    fun dtoToDomain(mapper: UpdateEmployeeDTO, id: Long, employeeRankDTO: EmployeeRankDTO) = Employee(
+    fun dtoToDomain(mapper: UpdateEmployeeDTO, id: Long, employeeRank: EmployeeRank) = Employee(
         id = id,
         firstName = mapper.firstName,
         lastName = mapper.lastName,
         middleName = mapper.middleName,
         sex = mapper.sex,
-        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()),
-        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()),
+        workStart = LocalTime.of(mapper.shift.take(2).toInt(), mapper.shift.substring(3, 5).toInt()).minusHours(3),
+        workFinish = LocalTime.of(mapper.shift.substring(6, 8).toInt(), mapper.shift.takeLast(2).toInt()).minusHours(3),
         workPhone = mapper.workPhone,
         personalPhone = mapper.personalPhone,
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
-        rank = employeeRankMapper.dtoToDomain(employeeRankDTO),
+        rank = employeeRank,
         login = mapper.workPhone,
-        shiftType = mapper.shift //TODO это поле нужно??
+        shiftType = mapper.shift,
+        isPasswordTemp = false
     )
 
     fun domainToEntity(mapper: Employee, userEntity: MetroUserEntity) = EmployeeEntity(

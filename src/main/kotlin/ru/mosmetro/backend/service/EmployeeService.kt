@@ -11,8 +11,11 @@ import ru.mosmetro.backend.mapper.EmployeeRankMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftMapper
 import ru.mosmetro.backend.model.dto.EntityForEdit
 import ru.mosmetro.backend.model.dto.ListWithTotal
+import ru.mosmetro.backend.model.dto.employee.CreatedEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.CurrentEmployeeDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeeFilterRequestDTO
+import ru.mosmetro.backend.model.dto.employee.EmployeePasswordResetRequestDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeRankDTO
 import ru.mosmetro.backend.model.dto.employee.EmployeeShiftDTO
 import ru.mosmetro.backend.model.dto.employee.NewEmployeeDTO
@@ -26,6 +29,7 @@ import ru.mosmetro.backend.service.jwt.RefreshTokenService
 import ru.mosmetro.backend.util.executeSuspended
 import ru.mosmetro.backend.util.jpaContext
 
+
 @Service
 class EmployeeService(
     private val employeeMapper: EmployeeMapper,
@@ -38,7 +42,8 @@ class EmployeeService(
     private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
     private val metroUserEntityRepository: MetroUserEntityRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val transactionTemplate: TransactionTemplate
+    private val transactionTemplate: TransactionTemplate,
+    private val passwordGenerationService: PasswordGenerationService,
 ) {
     /**
      *
@@ -47,8 +52,23 @@ class EmployeeService(
      * @return список сущностей EmployeeDTO в которых предоставлена информация о рабочих
      *
      * */
-    suspend fun getEmployees(): ListWithTotal<EmployeeDTO> {
+    suspend fun getEmployees(request: EmployeeFilterRequestDTO): ListWithTotal<EmployeeDTO> {
         val employeeDTOList = jpaContext { employeeEntityRepository.findAll() }
+            .filter { entity ->
+                if (request.firstName != null && request.firstName != entity.firstName) {
+                    return@filter false
+                }
+                if (request.lastName != null && request.lastName != entity.lastName) {
+                    return@filter false
+                }
+                if (request.phone != null && request.phone != entity.personalPhone) {
+                    return@filter false
+                }
+                if (request.lightDuties != null && request.lightDuties != entity.lightDuties) {
+                    return@filter false
+                }
+                return@filter true
+            }
             .map { employeeMapper.entityToDomain(it) }
             .map { employeeMapper.domainToDto(it) }
         return ListWithTotal(employeeDTOList.size, employeeDTOList)
@@ -108,11 +128,11 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
-    suspend fun getEmployeeById(id: Long): EntityForEdit<EmployeeDTO> {
-        val employee: EmployeeDTO = jpaContext { employeeEntityRepository.findById(id) }
+    suspend fun getEmployeeById(id: Long): EntityForEdit<CurrentEmployeeDTO> {
+        val employee: CurrentEmployeeDTO = jpaContext { employeeEntityRepository.findById(id) }
             .orElseThrow { EntityNotFoundException(id.toString()) }
             .let { employeeMapper.entityToDomain(it) }
-            .let { employeeMapper.domainToDto(it) }
+            .let { employeeMapper.domainToCurrentDto(it) }
 
         return EntityForEdit(
             isLockedForEdit = lockService.checkEmployeeLock(id),
@@ -128,20 +148,22 @@ class EmployeeService(
      * @return сущность EmployeeDTO в которой предоставлена информация о рабочем
      *
      * */
-    suspend fun createEmployee(newEmployeeDTO: NewEmployeeDTO): EmployeeDTO = transactionTemplate.executeSuspended {
-        val employeeRank = employeeRankEntityRepository.findById(newEmployeeDTO.rankCode)
-            .orElseThrow { EntityNotFoundException(newEmployeeDTO.rankCode) }
+    suspend fun createEmployee(newEmployeeDTO: NewEmployeeDTO): CreatedEmployeeDTO =
+        transactionTemplate.executeSuspended {
+            val employeeRank = employeeRankEntityRepository.findById(newEmployeeDTO.rank)
+                .orElseThrow { EntityNotFoundException(newEmployeeDTO.rank) }
             .let { employeeRankMapper.entityToDomain(it) }
-            .let { employeeRankMapper.domainToDto(it) }
 
+            val password = passwordGenerationService.generateTempPassword()
         val userEntity = metroUserEntityRepository.save(
             MetroUserEntity(
                 null,
                 newEmployeeDTO.workPhone,
-                passwordEncoder.encode("temp"),
+                passwordEncoder.encode(password),
                 true
             )
         )
+            metroUserEntityRepository.flush()
 
         refreshTokenService.initUser(newEmployeeDTO.workPhone)
 
@@ -150,7 +172,7 @@ class EmployeeService(
             .let { employeeMapper.domainToEntity(it, userEntity) }
             .let { employeeEntityRepository.save(it) }
             .let { employeeMapper.entityToDomain(it) }
-            .let { employeeMapper.domainToDto(it) }
+            .let { employeeMapper.domainToCreatedDto(it, password) }
     }
 
     /**
@@ -168,7 +190,6 @@ class EmployeeService(
 
         val employeeRankDTO = employeeEntity.rank
             .let { employeeRankMapper.entityToDomain(it) }
-            .let { employeeRankMapper.domainToDto(it) }
 
         return updateEmployeeDTO
             .let { employeeMapper.dtoToDomain(updateEmployeeDTO, id, employeeRankDTO) }
@@ -191,11 +212,26 @@ class EmployeeService(
 
     /**
      *
-     * Метод обновляет пароль на временный для сотрудника
+     * Метод обновляет временный пароль на постоянный для сотрудника
      *
+     * @param dto - модель с новым паролем
      *
      * */
-    fun resetEmployeePassword() {
-        TODO()
+    suspend fun resetEmployeePassword(dto: EmployeePasswordResetRequestDTO) {
+        val login: String = ReactiveSecurityContextHolder.getContext()
+            .awaitSingle()
+            .authentication
+            .principal as String
+
+        val encodePass = passwordEncoder.encode(dto.newPassword)
+        jpaContext { metroUserEntityRepository.findByLogin(login) }
+            .orElseThrow { EntityNotFoundException(login) }
+            .let {
+                it.password = encodePass
+                it.isPasswordTemporary = false
+                return@let it
+            }
+            .let { metroUserEntityRepository.save(it) }
     }
+
 }

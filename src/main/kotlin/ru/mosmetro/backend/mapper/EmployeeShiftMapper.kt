@@ -20,7 +20,7 @@ class EmployeeShiftMapper(
     fun domainToDto(mapper: EmployeeShift) = EmployeeShiftDTO(
             id = mapper.id,
             shiftDate = mapper.shiftDate,
-            workStart = mapper.workStart,
-            workFinish = mapper.workFinish,
+            workStart = mapper.workStart.plusHours(3),
+            workFinish = mapper.workFinish.plusHours(3),
     )
 }

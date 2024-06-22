@@ -15,6 +15,31 @@ class MetroTransfersServiceTest {
     lateinit var transfersService: MetroTransfersService
 
     @Test
+    fun testRouteWithFirstCrosswalking() {
+        val response: OrderTransfersResponseDTO = transfersService.calculateTransfers(
+            OrderTransfersRequestDTO(
+                startStation = SKOBELEVSKAYA_STATION_ID,
+                finishStation = VDNH_STATION_ID
+            )
+        )
+
+        assertEquals(response.duration, response.transfers.sumOf { it.duration })
+
+        assertEquals("Улица Скобелевская", response.transfers.first().startStation.name)
+        assertEquals("Битцевский парк", response.transfers.first().finishStation.name)
+
+        val crosswalkings = response.transfers.filter { it.isCrosswalking }
+        assertEquals("Битцевский парк", crosswalkings.first().startStation.name)
+        assertEquals("Новоясеневская", crosswalkings.first().finishStation.name)
+        assertEquals(1, crosswalkings.size)
+
+        assertEquals("Новоясеневская", response.transfers.last().startStation.name)
+        assertEquals("ВДНХ", response.transfers.last().finishStation.name)
+
+        assertEquals(3, response.transfers.size)
+    }
+
+    @Test
     fun testRouteWithTransfers() {
         val response: OrderTransfersResponseDTO = transfersService.calculateTransfers(
             OrderTransfersRequestDTO(
@@ -27,13 +52,14 @@ class MetroTransfersServiceTest {
 
         assertEquals("Аэропорт", response.transfers.first().startStation.name)
         assertEquals("Тверская", response.transfers.first().finishStation.name)
-        assertEquals("Чеховская", response.transfers.last().startStation.name)
-        assertEquals("Нагорная", response.transfers.last().finishStation.name)
 
         val crosswalkings = response.transfers.filter { it.isCrosswalking }
         assertEquals("Тверская", crosswalkings.first().startStation.name)
         assertEquals("Чеховская", crosswalkings.first().finishStation.name)
         assertEquals(1, crosswalkings.size)
+
+        assertEquals("Чеховская", response.transfers.last().startStation.name)
+        assertEquals("Нагорная", response.transfers.last().finishStation.name)
 
         assertEquals(3, response.transfers.size)
     }
@@ -71,5 +97,8 @@ class MetroTransfersServiceTest {
         private const val SOKOL_STATION_ID = 26L
         private const val AIRPORT_STATION_ID = 27L
         private const val NAGORNAYA_STATION_ID = 165L
+
+        private const val SKOBELEVSKAYA_STATION_ID = 197L
+        private const val VDNH_STATION_ID = 96L
     }
 }
