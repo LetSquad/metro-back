@@ -49,7 +49,12 @@ class SecurityConfig(
             .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 
         if (metroSecurityProperties.csrfEnables) {
-            config.csrf { it.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()) }
+            config.csrf { csrf ->
+                csrf.csrfTokenRepository(
+                    CookieServerCsrfTokenRepository.withHttpOnlyFalse()
+                        .also { it.setHeaderName(CSRF_TOKEN_NAME) }
+                ).csrfTokenRequestHandler { exchange, _ -> exchange.request.headers.getFirst(CSRF_TOKEN_NAME) }
+            }
         } else {
             config.csrf { it.disable() }
         }
@@ -89,5 +94,9 @@ class SecurityConfig(
         val ccs = UrlBasedCorsConfigurationSource()
         ccs.registerCorsConfiguration("/**", cors)
         return ccs
+    }
+
+    companion object {
+        private const val CSRF_TOKEN_NAME = "X-Xsrf-Token"
     }
 }
