@@ -91,7 +91,8 @@ class EmployeeMapper(
         lightDuties = mapper.lightDuties,
         rank = employeeRankMapper.domainToDto(mapper.rank),
         employeeRole = EmployeeRoleType.valueOf(mapper.rank.role),
-        password = password
+        password = password,
+        login = mapper.login
     )
 
     fun dtoToDomain(mapper: NewEmployeeDTO, employeeRank: EmployeeRank) = Employee(
@@ -108,7 +109,7 @@ class EmployeeMapper(
         employeeNumber = mapper.employeeNumber,
         lightDuties = mapper.lightDuties,
         rank = employeeRank,
-        login = mapper.login,
+        login = mapper.workPhone,
         isPasswordTemp = true
     )
 

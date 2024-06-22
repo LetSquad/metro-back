@@ -31,4 +31,6 @@ data class CreatedEmployeeDTO(
     val rank: EmployeeRankDTO,
     @Schema(description = "Временный пароль пользователя")
     val password: String?,
+    @Schema(description = "Логин сотрудника")
+    val login: String?,
 )

@@ -158,7 +158,7 @@ class EmployeeService(
         val userEntity = metroUserEntityRepository.save(
             MetroUserEntity(
                 null,
-                newEmployeeDTO.login,
+                newEmployeeDTO.workPhone,
                 passwordEncoder.encode(password),
                 true
             )

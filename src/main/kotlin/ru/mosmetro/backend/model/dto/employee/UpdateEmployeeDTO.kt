@@ -17,7 +17,7 @@ data class UpdateEmployeeDTO(
     @Schema(description = "Рабочий телефон")
     val workPhone: String,
     @Schema(description = "Личный телефон")
-    val personalPhone: String,
+    val personalPhone: String?,
     @Schema(description = "Тип смены", pattern = "hh:mm-hh:mm")
     val shift: String,
     @Schema(description = "Номер сотрудника")
