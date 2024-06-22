@@ -15,6 +15,7 @@ metro:
     auth-token-validity: 1h
     refresh-token-validity: 7d
     none-same-site-cookies: false
+    csrf-enables: false
     cors-enables: true
 logging:
   level:

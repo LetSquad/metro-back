@@ -1,6 +1,5 @@
 package ru.mosmetro.backend.config.security
 
-import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -17,6 +16,7 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter
 import org.springframework.security.web.server.authorization.HttpStatusServerAccessDeniedHandler
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 import reactor.core.publisher.Mono
@@ -26,7 +26,6 @@ import ru.mosmetro.backend.config.properties.MetroSecurityProperties
 @Configuration
 @EnableWebFluxSecurity
 class SecurityConfig(
-    private val serverProperties: ServerProperties,
     private val metroSecurityProperties: MetroSecurityProperties
 ) {
 
@@ -35,8 +34,7 @@ class SecurityConfig(
         http: ServerHttpSecurity,
         authenticationFilter: AuthenticationWebFilter
     ): SecurityWebFilterChain {
-        val config = http.csrf { it.disable() }
-            .formLogin { it.disable() }
+        val config = http.formLogin { it.disable() }
             .httpBasic { it.disable() }
             .authorizeExchange {
                 it.pathMatchers(HttpMethod.POST, "/api/auth").permitAll()
@@ -49,6 +47,12 @@ class SecurityConfig(
                     .accessDeniedHandler(HttpStatusServerAccessDeniedHandler(HttpStatus.FORBIDDEN))
             }
             .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+
+        if (metroSecurityProperties.csrfEnables) {
+            config.csrf { it.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()) }
+        } else {
+            config.csrf { it.disable() }
+        }
 
         if (metroSecurityProperties.corsEnables) {
             config.cors { it.configurationSource(createLocalUrlBasedCorsConfigurationSource()) }

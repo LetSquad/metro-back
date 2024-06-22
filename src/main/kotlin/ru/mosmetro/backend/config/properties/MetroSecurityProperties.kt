@@ -10,5 +10,6 @@ data class MetroSecurityProperties @ConstructorBinding constructor(
     val authTokenValidity: Duration,
     val refreshTokenValidity: Duration,
     val noneSameSiteCookies: Boolean,
+    val csrfEnables: Boolean,
     val corsEnables: Boolean,
 )
