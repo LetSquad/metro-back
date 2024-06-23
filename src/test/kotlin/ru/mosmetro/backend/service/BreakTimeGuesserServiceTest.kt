@@ -74,7 +74,8 @@ class BreakTimeGuesserServiceTest {
             actualOrdersTime,
             listOf(
                 order1
-            )
+            ),
+            false
         )
 
         // assert
@@ -145,7 +146,8 @@ class BreakTimeGuesserServiceTest {
             actualOrdersTime,
             listOf(
                 order1
-            )
+            ),
+            false
         )
 
         // assert
@@ -155,8 +157,9 @@ class BreakTimeGuesserServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrder(
-                            timeStart = LocalDateTime.of(date.plusDays(1), LocalTime.of(3, 0)),
-                            timeFinish = LocalDateTime.of(date.plusDays(1), LocalTime.of(4, 0)),
+                            // TimeZone MOS = -3h
+                            timeStart = LocalDateTime.of(date.plusDays(1), LocalTime.of(6, 0)),
+                            timeFinish = LocalDateTime.of(date.plusDays(1), LocalTime.of(7, 0)),
                             actionType = TimeListActionType.BREAK,
                             order = null,
                         )
@@ -252,7 +255,8 @@ class BreakTimeGuesserServiceTest {
                 order1,
                 order2,
                 order3
-            )
+            ),
+            false
         )
 
         // assert
@@ -371,7 +375,8 @@ class BreakTimeGuesserServiceTest {
                 order1,
                 order2,
                 order3
-            )
+            ),
+            false
         )
 
         // assert
@@ -501,7 +506,8 @@ class BreakTimeGuesserServiceTest {
                 order1,
                 order2,
                 order3
-            )
+            ),
+            false
         )
 
         // assert

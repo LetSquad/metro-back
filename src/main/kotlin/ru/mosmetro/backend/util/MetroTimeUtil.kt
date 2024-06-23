@@ -12,5 +12,7 @@ object MetroTimeUtil {
 
     val TIME_ZONE_UTC = ZoneId.of("UTC")
     val TIME_ZONE_MOSCOW = ZoneOffset.of("+03:00")
-    val TRANSFER_TIME_PERIOD = 8 * 60
+
+    val MIN_TRANSFER_TIME_PERIOD_SEC = 8 * 60
+    val BEFORE_ORDER_TIME_PERIOD_SEC = 15 * 60L
 }

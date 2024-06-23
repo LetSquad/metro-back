@@ -1,8 +1,9 @@
 package ru.mosmetro.backend.model.domain
 
+import ru.mosmetro.backend.model.enums.PassengerCategoryType
+import ru.mosmetro.backend.util.MetroTimeUtil.BEFORE_ORDER_TIME_PERIOD_SEC
 import java.time.Duration
 import java.time.Instant
-import ru.mosmetro.backend.model.enums.PassengerCategoryType
 
 data class PassengerOrder(
     val id: Long?,
@@ -34,5 +35,11 @@ data class PassengerOrder(
     fun getSupposedFinishTime(
     ): Instant {
         return this.orderTime.plusSeconds(this.duration.toSeconds())
+    }
+
+    fun getOrderTime(
+        addPeriodBefore: Boolean
+    ): Instant {
+        return if (addPeriodBefore) this.orderTime.minusSeconds(BEFORE_ORDER_TIME_PERIOD_SEC) else this.orderTime
     }
 }

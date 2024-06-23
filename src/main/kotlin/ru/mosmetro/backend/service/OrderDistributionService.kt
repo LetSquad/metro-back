@@ -21,8 +21,8 @@ import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_FINISH
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_START
+import ru.mosmetro.backend.util.MetroTimeUtil.MIN_TRANSFER_TIME_PERIOD_SEC
 import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_UTC
-import ru.mosmetro.backend.util.MetroTimeUtil.TRANSFER_TIME_PERIOD
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -43,7 +43,7 @@ class OrderDistributionService(
     suspend fun calculateOrderDistribution(
         planDate: LocalDate
     ): ListWithTotal<OrderTimeDTO> {
-        val result: OrderTimeListDTO = calculateOrderDistribution(planDate, true, true)
+        val result: OrderTimeListDTO = calculateOrderDistribution(planDate, true, true, true)
 
         return ListWithTotal(result.ordersTime.size, result.ordersTime)
     }
@@ -51,13 +51,14 @@ class OrderDistributionService(
     fun calculateOrderDistributionForTest(
         planDate: LocalDate
     ): OrderTimeListDTO {
-        return runBlocking { calculateOrderDistribution(planDate, false, false) }
+        return runBlocking { calculateOrderDistribution(planDate, false, false, false) }
     }
 
     suspend fun calculateOrderDistribution(
         planDate: LocalDate,
         guessBreakTime: Boolean,
         addTransferPeriod: Boolean,
+        addPeriodBeforeOrder: Boolean,
     ): OrderTimeListDTO {
         // получаем всех занятых сотрудников исходя из их графика работы
         // создаем на всех лист занятости
@@ -70,12 +71,12 @@ class OrderDistributionService(
         val passengerOrderList =
             orderService.getOrdersBetweenOrderDate(orderStartTime, orderFinishTime)
                 .filter { it.orderStatus.code != OrderStatusType.CANCELED && it.orderStatus.code != OrderStatusType.REJECTED }
-                .sortedWith(compareBy({ it.orderTime }, { it.createdAt }))
+                .sortedWith(compareBy({ it.getOrderTime(addPeriodBeforeOrder) }, { it.createdAt }))
 
         if (guessBreakTime) {
-            breakTimeGuesserService.guessBreakTime(planDate, employeeTimePlanList, passengerOrderList)
+            breakTimeGuesserService.guessBreakTime(planDate, employeeTimePlanList, passengerOrderList, addPeriodBeforeOrder)
 
-            // TODO график фронта не может отобразить время за пределами 1-00
+            // TODO график фронта не может отобразить время за пределами 01-00
             //      считаем что в ночное время обеды распределять не нужно
             breakTimeGuesserService.hackCleanAllNightBreakTime(employeeTimePlanList)
         }
@@ -88,9 +89,10 @@ class OrderDistributionService(
                 planDate,
                 passengerOrder,
                 employeeTimePlanList,
-                LocalDateTime.ofInstant(passengerOrder.orderTime, TIME_ZONE_UTC),
+                LocalDateTime.ofInstant(passengerOrder.getOrderTime(addPeriodBeforeOrder), TIME_ZONE_UTC),
                 LocalDateTime.ofInstant(passengerOrder.getSupposedFinishTime(), TIME_ZONE_UTC),
-                addTransferPeriod
+                addTransferPeriod,
+                addPeriodBeforeOrder
             )
 
             if (notBusyEmployeeList.isEmpty()
@@ -102,7 +104,7 @@ class OrderDistributionService(
 
             // считаем приоритет на каждого сотрудника по текущей заявке
             val employeePriorityList: List<EmployeePriority> =
-                makeEmployeePriorityList(notBusyEmployeeList, passengerOrder, addTransferPeriod)
+                makeEmployeePriorityList(notBusyEmployeeList, passengerOrder, addTransferPeriod, addPeriodBeforeOrder)
 
             val employeeForOrderList: MutableList<EmployeePriority> = mutableListOf()
             // начинаем распределять с женщин
@@ -161,7 +163,7 @@ class OrderDistributionService(
             }
 
             employeeForOrderList.forEach {
-                addBusyTimeToTimePlan(employeeTimePlanList, it.employee, it.transferTime, passengerOrder)
+                addBusyTimeToTimePlan(employeeTimePlanList, it.employee, it.transferTime, passengerOrder, addPeriodBeforeOrder)
             }
         }
 
@@ -189,7 +191,8 @@ class OrderDistributionService(
         employeeTimePlanList: List<OrderTime>,
         employee: Employee,
         transferTime: Duration,
-        order: PassengerOrder
+        order: PassengerOrder,
+        addPeriodBeforeOrder: Boolean,
     ) {
         employeeTimePlanList
             .find { it.employee == employee }
@@ -197,9 +200,9 @@ class OrderDistributionService(
                 if (!transferTime.isZero) {
                     it!!.timePlan.add(
                         EmployeeShiftOrder(
-                            timeStart = LocalDateTime.ofInstant(order.orderTime, TIME_ZONE_UTC)
+                            timeStart = LocalDateTime.ofInstant(order.getOrderTime(addPeriodBeforeOrder), TIME_ZONE_UTC)
                                 .minusSeconds(transferTime.toSeconds()),
-                            timeFinish = LocalDateTime.ofInstant(order.orderTime, TIME_ZONE_UTC),
+                            timeFinish = LocalDateTime.ofInstant(order.getOrderTime(addPeriodBeforeOrder), TIME_ZONE_UTC),
                             actionType = TimeListActionType.TRANSFER,
                             order = null
                         )
@@ -208,7 +211,7 @@ class OrderDistributionService(
 
                 it!!.timePlan.add(
                     EmployeeShiftOrder(
-                        timeStart = LocalDateTime.ofInstant(order.orderTime, TIME_ZONE_UTC),
+                        timeStart = LocalDateTime.ofInstant(order.getOrderTime(addPeriodBeforeOrder), TIME_ZONE_UTC),
                         timeFinish = LocalDateTime.ofInstant(order.getSupposedFinishTime(), TIME_ZONE_UTC),
                         actionType = TimeListActionType.ORDER,
                         order = order
@@ -219,7 +222,7 @@ class OrderDistributionService(
 
     private fun hasSuitableEmployee(
         priorityEmployeeList: List<EmployeePriority>,
-        passengerCategory: PassengerCategoryType,
+        passengerCategory: PassengerCategoryType, // TODO
         baggage: OrderBaggage?,
         sexType: SexType
     ): Boolean {
@@ -275,23 +278,24 @@ class OrderDistributionService(
         planDate: LocalDate,
         order: PassengerOrder,
         timeLineEmployee: List<OrderTime>,
-        orderTime: LocalDateTime,
-        finishTime: LocalDateTime,
-        addTransferPeriod: Boolean
+        orderStartTime: LocalDateTime,
+        orderFinishTime: LocalDateTime,
+        addTransferPeriod: Boolean,
+        addPeriodBeforeOrder: Boolean,
     ): List<OrderTime> {
         return timeLineEmployee
             .filter {
                 // смена сотрудника позволяет взять заявку
                 if (it.employee.workStart > it.employee.workFinish)
-                    LocalDateTime.of(planDate, it.employee.workStart) <= orderTime
-                            && LocalDateTime.of(planDate.plusDays(1), it.employee.workFinish) >= finishTime
+                    LocalDateTime.of(planDate, it.employee.workStart) <= orderStartTime
+                            && LocalDateTime.of(planDate.plusDays(1), it.employee.workFinish) >= orderFinishTime
                 else
-                    LocalDateTime.of(planDate, it.employee.workStart) <= orderTime
-                            && LocalDateTime.of(planDate, it.employee.workFinish) >= finishTime
+                    LocalDateTime.of(planDate, it.employee.workStart) <= orderStartTime
+                            && LocalDateTime.of(planDate, it.employee.workFinish) >= orderFinishTime
             }
             .filter {
                 // сотрудник свободен по графику дня
-                it.timePlan.all { plan -> plan.timeFinish <= orderTime || plan.timeStart >= finishTime }
+                it.timePlan.all { plan -> plan.timeFinish <= orderStartTime || plan.timeStart >= orderFinishTime }
             }
             .filter {   // сотрудник успеет приехать на станцию
                 // если пока не занят
@@ -301,7 +305,7 @@ class OrderDistributionService(
                 // если занят
                 } else {
                     val planBefore = it.timePlan
-                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.orderTime }
+                        .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.getOrderTime(addPeriodBeforeOrder) }
                         .filter { it.order != null }
                         .sortedBy { it.timeStart }
                     // по закрепленному плану свободен
@@ -317,7 +321,7 @@ class OrderDistributionService(
                                 addTransferPeriod
                             )
 
-                        planBefore.last().timeFinish.plusSeconds(timeTransferSeconds).toInstant(ZoneOffset.UTC) <= order.orderTime
+                        planBefore.last().timeFinish.plusSeconds(timeTransferSeconds).toInstant(ZoneOffset.UTC) <= order.getOrderTime(addPeriodBeforeOrder)
                     }
                 }
             }
@@ -327,13 +331,14 @@ class OrderDistributionService(
     private fun makeEmployeePriorityList(
         orderTimes: List<OrderTime>,
         order: PassengerOrder,
-        addTransferPeriod: Boolean
+        addTransferPeriod: Boolean,
+        addPeriodBeforeOrder: Boolean,
     ): List<EmployeePriority> {
         return orderTimes
             .map {
                 var priority = 0
 
-                val timeTransfer = calculateMetroTransferTime(it, order, addTransferPeriod)
+                val timeTransfer = calculateMetroTransferTime(it, order, addTransferPeriod, addPeriodBeforeOrder)
                 priority += calculateMetroTransferPriority(timeTransfer) // приоритет по времени в пути сотрудника на заявку
 
                 EmployeePriority(it.employee, timeTransfer, priority)
@@ -344,10 +349,11 @@ class OrderDistributionService(
     private fun calculateMetroTransferTime(
         orderTime: OrderTime,
         order: PassengerOrder,
-        addTransferPeriod: Boolean
+        addTransferPeriod: Boolean,
+        addPeriodBeforeOrder: Boolean,
     ): Duration {
         val orderStartStation = order.startStation
-        val employeeStation = getEmployeeStation(orderTime, order)
+        val employeeStation = getEmployeeStation(orderTime, order, addPeriodBeforeOrder)
         return if (employeeStation == null) Duration.ZERO else Duration.ofSeconds(
             addTransferPeriodTime(
                 metroTransfersService.calculateMetroStationTransfersDuration(
@@ -363,7 +369,7 @@ class OrderDistributionService(
         transferDurationSec: Long,
         addTransferPeriod: Boolean
     ): Long {
-        return if (addTransferPeriod) transferDurationSec + TRANSFER_TIME_PERIOD else transferDurationSec
+        return if (addTransferPeriod) transferDurationSec + MIN_TRANSFER_TIME_PERIOD_SEC else transferDurationSec
     }
 
     private fun calculateMetroTransferPriority(
@@ -383,6 +389,7 @@ class OrderDistributionService(
     private fun getEmployeeStation(
         orderTime: OrderTime,
         order: PassengerOrder,
+        addPeriodBeforeOrder: Boolean,
     ): MetroStation? {
         // по плану свободен
         if (orderTime.timePlan.isEmpty()) {
@@ -390,7 +397,7 @@ class OrderDistributionService(
         }
 
         val planBefore = orderTime.timePlan
-            .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.orderTime }
+            .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.getOrderTime(addPeriodBeforeOrder) }
             .filter { it.order != null }
             .sortedBy { it.timeStart }
 

@@ -20,6 +20,7 @@ class BreakTimeGuesserService {
         planDate: LocalDate,
         employeeTimePlanList: List<OrderTime>,
         passengerOrderList: List<PassengerOrder>,
+        addPeriodBeforeOrder: Boolean,
     ) {
         if (allEmployeesHasBreak(employeeTimePlanList)) {
             return
@@ -57,9 +58,9 @@ class BreakTimeGuesserService {
             val ordersBetweenTime =
                 passengerOrderList
                     .filter {
-                        !(it.orderTime <= start.toInstant(ZoneOffset.UTC)
+                        !(it.getOrderTime(addPeriodBeforeOrder) <= start.toInstant(ZoneOffset.UTC)
                                 && it.getSupposedFinishTime() <= start.toInstant(ZoneOffset.UTC)
-                                || it.orderTime >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC)
+                                || it.getOrderTime(addPeriodBeforeOrder) >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC)
                                 && it.getSupposedFinishTime() >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC))
 
                     }
@@ -180,7 +181,7 @@ class BreakTimeGuesserService {
                                                         &&
                                                         employeeTimeFreeOn(
                                                             startTime = LocalDateTime.ofInstant(
-                                                                order.orderTime,
+                                                                order.getOrderTime(addPeriodBeforeOrder),
                                                                 TIME_ZONE_UTC
                                                             ),
                                                             finishTime = LocalDateTime.ofInstant(
@@ -194,7 +195,7 @@ class BreakTimeGuesserService {
                                                 it.timePlan.add(
                                                     EmployeeShiftOrder(
                                                         timeStart = LocalDateTime.ofInstant(
-                                                            order.orderTime,
+                                                            order.getOrderTime(addPeriodBeforeOrder),
                                                             TIME_ZONE_UTC
                                                         ),
                                                         timeFinish = LocalDateTime.ofInstant(

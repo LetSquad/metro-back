@@ -126,7 +126,7 @@ class TimeListServiceTest {
                     listOf(
                         makeEmployeeShiftOrder(
                             date = date,
-                            timeStart = METRO_TIME_START,
+                            timeStart = METRO_TIME_START.plusHours(3),
                             timeFinish = LocalTime.of(9, 0),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
@@ -168,7 +168,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrder(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
                         ),
@@ -179,7 +179,7 @@ class TimeListServiceTest {
                     listOf(
                         makeEmployeeShiftOrder(
                             date = date,
-                            timeStart = METRO_TIME_START,
+                            timeStart = METRO_TIME_START.plusHours(3),
                             timeFinish = LocalTime.of(18, 0),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
@@ -214,7 +214,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrder(
                             timeStart = LocalDateTime.of(date, LocalTime.of(22, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
                         ),
@@ -272,7 +272,7 @@ class TimeListServiceTest {
                     listOf(
                         makeEmployeeShiftOrder(
                             date = date,
-                            timeStart = METRO_TIME_START,
+                            timeStart = METRO_TIME_START.plusHours(3),
                             timeFinish = LocalTime.of(20, 0),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null
@@ -306,7 +306,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrder(
                             timeStart = LocalDateTime.of(date.plusDays(1), LocalTime.of(0, 30)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.DOWNTIME,
                             order = null
                         ),
@@ -381,7 +381,7 @@ class TimeListServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -412,7 +412,7 @@ class TimeListServiceTest {
                         ),
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -526,9 +526,9 @@ class TimeListServiceTest {
         return EmployeeShiftEntity(
             id = id,
             shiftDate = instantShiftDate,
-            workStart = workStart,
-            workFinish = workFinish,
-            employee = employeeMapper.domainToEntity(employee, MetroUserEntity(1, "", "", true)),
+            workStart = workStart.minusHours(3),
+            workFinish = workFinish.minusHours(3),
+            employee = employeeMapper.domainToEntity(employee, MetroUserEntity(1, "", "", false)),
         )
     }
 
@@ -547,8 +547,8 @@ class TimeListServiceTest {
             order = null,
             isAttached = isAttached,
             actionType = actionType.name,
-            timeStart = LocalDateTime.of(date, timeStart).toInstant(ZoneOffset.UTC),
-            timeFinish = LocalDateTime.of(date, timeFinish).toInstant(ZoneOffset.UTC),
+            timeStart = LocalDateTime.of(date, timeStart).minusHours(3).toInstant(ZoneOffset.UTC),
+            timeFinish = LocalDateTime.of(date, timeFinish).minusHours(3).toInstant(ZoneOffset.UTC),
             createdAt = Instant.now(),
         )
     }
@@ -561,8 +561,8 @@ class TimeListServiceTest {
         order: PassengerOrder?,
     ): EmployeeShiftOrder {
         return EmployeeShiftOrder(
-            timeStart = LocalDateTime.of(date, timeStart),
-            timeFinish = LocalDateTime.of(date, timeFinish),
+            timeStart = LocalDateTime.of(date, timeStart).minusHours(3),
+            timeFinish = LocalDateTime.of(date, timeFinish).minusHours(3),
             actionType = actionType,
             order = order,
         )
@@ -575,8 +575,8 @@ class TimeListServiceTest {
         order: PassengerOrder?,
     ): EmployeeShiftOrder {
         return EmployeeShiftOrder(
-            timeStart = timeStart,
-            timeFinish = timeFinish,
+            timeStart = timeStart.minusHours(3),
+            timeFinish = timeFinish.minusHours(3),
             actionType = actionType,
             order = order,
         )
