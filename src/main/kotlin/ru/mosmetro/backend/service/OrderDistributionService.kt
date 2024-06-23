@@ -1,5 +1,6 @@
 package ru.mosmetro.backend.service
 
+import jakarta.persistence.EntityNotFoundException
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import ru.mosmetro.backend.mapper.EmployeeMapper
@@ -15,15 +16,19 @@ import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
+import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
+import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
+import ru.mosmetro.backend.repository.EmployeeShiftOrderEntityRepository
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_FINISH
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_START
 import ru.mosmetro.backend.util.MetroTimeUtil.MIN_TRANSFER_TIME_PERIOD_SEC
 import ru.mosmetro.backend.util.MetroTimeUtil.TIME_ZONE_UTC
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -38,7 +43,10 @@ class OrderDistributionService(
 
     private val employeeMapper: EmployeeMapper,
     private val orderMapper: OrderMapper,
-    private val employeeShiftOrderMapper: EmployeeShiftOrderMapper
+    private val employeeShiftOrderMapper: EmployeeShiftOrderMapper,
+
+    private val employeeShiftOrderEntityRepository: EmployeeShiftOrderEntityRepository,
+    private val employeeShiftEntityRepository: EmployeeShiftEntityRepository
 ) {
 
     suspend fun calculateOrderDistribution(
@@ -174,6 +182,8 @@ class OrderDistributionService(
             employeeTimePlanList
         )
 
+        saveAutoDistribution(allTimeEmployeeTimePlanList, planDate)
+
         val result: List<OrderTime> =
             allTimeEmployeeTimePlanList
                 .map {
@@ -201,6 +211,33 @@ class OrderDistributionService(
             ordersNotInPlan = orderNotInPlanList.map { orderMapper.domainToDto(it) },
             ordersTime = orderTimeList
         )
+    }
+
+    private fun saveAutoDistribution(
+        orderTimeList: List<OrderTime>,
+        planDate: LocalDate
+    ) {
+        orderTimeList.forEach { orderTime ->
+            val employeeShift =
+                employeeShiftEntityRepository.findByShiftDateAndEmployeeId(planDate.atStartOfDay().toInstant(ZoneOffset.UTC), orderTime.employee.id!!)
+                    .orElseThrow{EntityNotFoundException("employeeShift not found for employee ${orderTime.employee.id} on date $planDate")}
+
+            orderTime.timePlan.forEach {timePlan ->
+                val entity =
+                    EmployeeShiftOrderEntity(
+                        id = null,
+                        employeeShift = employeeShift,
+                        order = timePlan.order?.let { orderService.getOrderEntityById(timePlan.order.id!!) },
+                        isAttached = false,
+                        actionType = timePlan.actionType.name,
+                        timeStart = timePlan.timeStart.toInstant(ZoneOffset.UTC),
+                        timeFinish = timePlan.timeFinish.toInstant(ZoneOffset.UTC),
+                        createdAt = Instant.now(),
+                    )
+
+                employeeShiftOrderEntityRepository.save(entity)
+            }
+        }
     }
 
     private fun addBusyTimeToTimePlan(
