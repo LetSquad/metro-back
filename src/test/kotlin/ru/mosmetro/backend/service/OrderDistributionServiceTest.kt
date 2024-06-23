@@ -170,7 +170,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -239,7 +239,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -358,7 +358,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(20, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -408,7 +408,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date.plusDays(1), LocalTime.of(0, 45)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.DOWNTIME,
                             order = null,
                         ),
@@ -531,7 +531,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -560,7 +560,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -679,7 +679,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -729,7 +729,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -851,7 +851,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -901,7 +901,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1023,7 +1023,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1036,7 +1036,7 @@ class OrderDistributionServiceTest {
                         ),
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(10, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1156,7 +1156,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1210,7 +1210,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1335,7 +1335,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1363,7 +1363,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1511,7 +1511,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1559,7 +1559,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1569,7 +1569,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1617,7 +1617,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1748,7 +1748,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1776,7 +1776,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1786,7 +1786,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -1834,7 +1834,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -1914,7 +1914,7 @@ class OrderDistributionServiceTest {
                 femaleEmployeeCount = 0,
                 orderTime = LocalDateTime.of(date, LocalTime.of(14, 0)),
                 finishTime = LocalDateTime.of(date, LocalTime.of(15, 0)),
-                orderStatusType = OrderStatusType.ACCEPTED,
+                orderStatusType = OrderStatusType.REJECTED,
                 baggage = null,
                 passengerCategory = PassengerCategory(
                     code = PassengerCategoryType.PL,
@@ -1924,9 +1924,8 @@ class OrderDistributionServiceTest {
                 startMetroStation = station3,
                 finishMetroStation = station3,
             )
-        // TODO без фильтрации заявок по статусу order3 не должен возвращаться в списке на распределение
-        val orders: List<PassengerOrder> = listOf(order1, order2)
-//        val orders: List<PassengerOrder> = listOf(order1, order2, order3)
+
+        val orders: List<PassengerOrder> = listOf(order1, order2, order3)
 
         val orderStartTime = LocalDateTime.of(date, METRO_TIME_START)
         val orderFinishTime = LocalDateTime.of(date, METRO_TIME_FINISH)
@@ -1979,7 +1978,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2027,7 +2026,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2037,7 +2036,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2065,7 +2064,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2175,7 +2174,7 @@ class OrderDistributionServiceTest {
                     employee1,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2203,7 +2202,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2213,7 +2212,7 @@ class OrderDistributionServiceTest {
                     employee2,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2228,7 +2227,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2238,7 +2237,7 @@ class OrderDistributionServiceTest {
                     employee3,
                     listOf(
                         makeEmployeeShiftOrderDTO(
-                            timeStart = LocalDateTime.of(date, METRO_TIME_START),
+                            timeStart = LocalDateTime.of(date, METRO_TIME_START).plusHours(3),
                             timeFinish = LocalDateTime.of(date, LocalTime.of(9, 0)),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
@@ -2253,7 +2252,7 @@ class OrderDistributionServiceTest {
 
                         makeEmployeeShiftOrderDTO(
                             timeStart = LocalDateTime.of(date, LocalTime.of(18, 0)),
-                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH),
+                            timeFinish = LocalDateTime.of(date, METRO_TIME_FINISH).plusHours(3),
                             actionType = TimeListActionType.NON_WORKING,
                             order = null,
                         ),
@@ -2322,7 +2321,7 @@ class OrderDistributionServiceTest {
         onDate: LocalDate,
         list: List<OrderTime>
     ) = runBlocking {
-        Mockito.`when`(timeListService.getOrderTimeList(onDate)).thenReturn(list)
+        Mockito.doReturn(list).`when`(timeListService).getOrderTimeList(onDate)
     }
 
     private fun mockGetEmployeeTimePlanDB(

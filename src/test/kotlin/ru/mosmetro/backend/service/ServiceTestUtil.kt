@@ -52,8 +52,9 @@ object ServiceTestUtil {
             lastName = "",
             middleName = "",
             sex = sex,
-            workStart = workStart,
-            workFinish = workFinish,
+            // TimeZone MOS = -3h
+            workStart = workStart.minusHours(3),
+            workFinish = workFinish.minusHours(3),
             shiftType = "",
             workPhone = "",
             personalPhone = "",
@@ -66,6 +67,7 @@ object ServiceTestUtil {
                 role = EmployeeRoleType.ADMIN.name,
                 ),
             login = "",
+            isPasswordTemp = false
         )
     }
 
@@ -91,7 +93,8 @@ object ServiceTestUtil {
             femaleEmployeeCount = femaleEmployeeCount,
             duration = Duration.between(orderTime, finishTime),
             additionalInfo = null,
-            orderTime = orderTime.toInstant(ZoneOffset.UTC),
+            // TimeZone MOS = -3h
+            orderTime = orderTime.minusHours(3).toInstant(ZoneOffset.UTC),
             startTime = Instant.now(),
             finishTime = null,
             absenceTime = null,
@@ -145,7 +148,8 @@ object ServiceTestUtil {
             femaleEmployeeCount = femaleEmployeeCount,
             duration = Duration.between(orderTime, finishTime),
             additionalInfo = null,
-            orderTime = orderTime.toInstant(ZoneOffset.UTC),
+            // TimeZone MOS = -3h
+            orderTime = orderTime.minusHours(3).toInstant(ZoneOffset.UTC),
             startTime = Instant.now(),
             finishTime = null,
             absenceTime = null,
@@ -183,8 +187,9 @@ object ServiceTestUtil {
         order: PassengerOrder?,
     ): EmployeeShiftOrder {
         return EmployeeShiftOrder(
-            timeStart = timeStart,
-            timeFinish = timeFinish,
+            // TimeZone MOS = -3h
+            timeStart = timeStart.minusHours(3),
+            timeFinish = timeFinish.minusHours(3),
             actionType = actionType,
             order = order
         )
