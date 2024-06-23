@@ -16,6 +16,7 @@ import ru.mosmetro.backend.model.dto.order.OrderTransfersResponseDTO
 import ru.mosmetro.backend.repository.MetroStationEntityRepository
 import ru.mosmetro.backend.repository.MetroStationTransferEntityRepository
 import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class MetroTransfersService(
@@ -30,6 +31,8 @@ class MetroTransfersService(
         .associateBy { it.id!! }
 
     private val graph = AsSynchronizedGraph(DefaultDirectedWeightedGraph<Long, DefaultWeightedEdge>(DefaultWeightedEdge::class.java))
+
+    private val transfersDurationCache = ConcurrentHashMap<Pair<Long, Long>, Long>()
 
     @PostConstruct
     fun init() {
@@ -65,7 +68,10 @@ class MetroTransfersService(
         start: MetroStation,
         finish: MetroStation,
     ): Long {
-        return calculateTransfers(start.id!!, finish.id!!).duration
+        val cachedDuration: Long? = transfersDurationCache[start.id!! to finish.id!!]
+        if (cachedDuration != null) return cachedDuration
+
+        return calculateTransfers(start.id, finish.id).duration
     }
 
     fun calculateTransfers(
@@ -131,8 +137,11 @@ class MetroTransfersService(
             }
         }
 
+        val duration: Long = fullPath.weight.toLong()
+        transfersDurationCache[startStationId to finishStationId] = duration
+
         return OrderTransfers(
-            duration = fullPath.weight.toLong(),
+            duration = duration,
             transfers = resultPath
         )
     }
