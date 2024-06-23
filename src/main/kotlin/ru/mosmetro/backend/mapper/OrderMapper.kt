@@ -1,6 +1,7 @@
 package ru.mosmetro.backend.mapper
 
 import org.springframework.stereotype.Component
+import ru.mosmetro.backend.model.domain.Employee
 import ru.mosmetro.backend.model.domain.MetroStation
 import ru.mosmetro.backend.model.domain.OrderApplication
 import ru.mosmetro.backend.model.domain.OrderBaggage
@@ -32,6 +33,7 @@ class OrderMapper(
     private val metroStationMapper: MetroStationMapper,
     private val metroStationTransferMapper: MetroStationTransferMapper,
     private val passengerMapper: PassengerMapper,
+    private val employeeMapper: EmployeeMapper
 ) {
     fun entityToDomain(mapper: PassengerOrderEntity, passengerPhone: Set<PassengerPhoneEntity>) = PassengerOrder(
         id = mapper.id,
@@ -70,7 +72,11 @@ class OrderMapper(
         employees = emptySet()
     )
 
-    fun domainToDto(mapper: PassengerOrder) = PassengerOrderDTO(
+    fun domainToDto(mapper: PassengerOrder): PassengerOrderDTO {
+        return domainToDto(mapper, emptyList())
+    }
+
+    fun domainToDto(mapper: PassengerOrder, employeeList: List<Employee>?) = PassengerOrderDTO(
         id = mapper.id,
         startDescription = mapper.startDescription,
         finishDescription = mapper.finishDescription,
@@ -99,7 +105,7 @@ class OrderMapper(
         passenger = passengerMapper.domainToDto(mapper.passenger),
         passengerCategory = mapper.passengerCategory,
         transfers = mapper.transfers.map { metroStationTransferMapper.domainToDto(it) },
-        employees = emptySet()
+        employees = employeeList?.map { employeeMapper.domainToDto(it) }?.toSet() ?: emptySet()
     )
 
     fun dtoToDomain(
