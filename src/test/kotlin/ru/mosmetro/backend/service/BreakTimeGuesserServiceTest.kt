@@ -74,7 +74,8 @@ class BreakTimeGuesserServiceTest {
             actualOrdersTime,
             listOf(
                 order1
-            )
+            ),
+            false
         )
 
         // assert
@@ -145,7 +146,8 @@ class BreakTimeGuesserServiceTest {
             actualOrdersTime,
             listOf(
                 order1
-            )
+            ),
+            false
         )
 
         // assert
@@ -253,7 +255,8 @@ class BreakTimeGuesserServiceTest {
                 order1,
                 order2,
                 order3
-            )
+            ),
+            false
         )
 
         // assert
@@ -372,7 +375,8 @@ class BreakTimeGuesserServiceTest {
                 order1,
                 order2,
                 order3
-            )
+            ),
+            false
         )
 
         // assert
@@ -502,7 +506,8 @@ class BreakTimeGuesserServiceTest {
                 order1,
                 order2,
                 order3
-            )
+            ),
+            false
         )
 
         // assert
