@@ -27,6 +27,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 @Service
 class OrderDistributionService(
@@ -173,7 +174,22 @@ class OrderDistributionService(
             employeeTimePlanList
         )
 
-        val orderTimeList = allTimeEmployeeTimePlanList
+        val result: List<OrderTime> =
+            allTimeEmployeeTimePlanList
+                .map {
+                    val truncateSecondsPlan = it.timePlan.map {
+                        EmployeeShiftOrder(
+                            timeStart = it.timeStart.truncatedTo(ChronoUnit.MINUTES),
+                            timeFinish = it.timeFinish.truncatedTo(ChronoUnit.MINUTES),
+                            actionType = it.actionType,
+                            order = it.order,
+                        )
+                    }.toMutableList()
+
+                    return@map OrderTime(it.employee, truncateSecondsPlan)
+                }.toList()
+
+        val orderTimeList = result
             .map {
                 OrderTimeDTO(
                     employee = employeeMapper.domainToDto(it.employee),
