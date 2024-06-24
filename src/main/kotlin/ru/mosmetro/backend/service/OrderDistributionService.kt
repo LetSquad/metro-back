@@ -359,7 +359,7 @@ class OrderDistributionService(
                 } else {
                     val planBefore = it.timePlan
                         .filter { it.timeFinish.toInstant(ZoneOffset.UTC) <= order.getOrderTime(addPeriodBeforeOrder) }
-                        .filter { it.order != null }
+                        .filter { it.order != null || it.actionType == TimeListActionType.BREAK }
                         .sortedBy { it.timeStart }
                     // по закрепленному плану свободен
                     if (planBefore.isEmpty()) {
@@ -368,7 +368,7 @@ class OrderDistributionService(
                         val timeTransferSeconds =
                             addTransferPeriodTime(
                                 metroTransfersService.calculateMetroStationTransfersDuration(
-                                    planBefore.last().order!!.finishStation,
+                                    planBefore.last { it.order != null }.order!!.finishStation,
                                     order.startStation
                                 ),
                                 addTransferPeriod
