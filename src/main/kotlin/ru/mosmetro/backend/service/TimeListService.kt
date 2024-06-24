@@ -199,7 +199,7 @@ class TimeListService(
                     // время в промежутке
                     if (index != it.size - 1) {
                         val next = it.get(index + 1)
-                        if (value.timeFinish != next.timeStart) {
+                        if (next.timeStart > value.timeFinish) {
                             result.add(
                                 EmployeeShiftOrder(
                                     timeStart = value.timeFinish,
