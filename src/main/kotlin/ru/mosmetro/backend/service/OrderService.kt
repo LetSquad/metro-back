@@ -18,7 +18,6 @@ import ru.mosmetro.backend.model.dto.order.UpdateOrderStatusDTO
 import ru.mosmetro.backend.model.dto.order.UpdatedPassengerOrderDTO
 import ru.mosmetro.backend.model.entity.EmployeeEntity
 import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
-import ru.mosmetro.backend.model.entity.PassengerOrderEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import ru.mosmetro.backend.repository.EmployeeEntityRepository
@@ -163,11 +162,6 @@ class OrderService(
         )
     }
 
-    fun getOrderEntityById(id: Long): PassengerOrderEntity {
-        return passengerOrderEntityRepository.findById(id)
-            .orElseThrow { NoSuchOrderException(id) }
-    }
-
     /**
      *
      * Метод создает новую заявку
@@ -223,7 +217,7 @@ class OrderService(
         val passengerOrderEntity = jpaContext { passengerOrderEntityRepository.findById(orderId) }
             .orElseThrow { NoSuchOrderException(orderId) }
 
-        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(OrderStatusType.REVIEW.name) }
+        val orderStatusEntity = jpaContext { orderStatusEntityRepository.findByCode(updatedPassengerOrderDTO.orderApplication.name) }
             .orElseThrow { EntityNotFoundException(OrderStatusType.REVIEW.name) }
 
         val passenger = passengerService.getPassengerById(updatedPassengerOrderDTO.passenger).data
