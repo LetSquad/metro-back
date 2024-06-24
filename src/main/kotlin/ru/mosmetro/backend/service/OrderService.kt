@@ -277,9 +277,8 @@ class OrderService(
                             val shiftDay =
                                 LocalDateTime.ofInstant(updatedPassengerOrderDTO.orderTime, MetroTimeUtil.TIME_ZONE_UTC).truncatedTo(ChronoUnit.DAYS)
                             val employeeShift =
-                                employeeShiftEntityRepository.findByShiftDateBetweenAndEmployeeId(
+                                employeeShiftEntityRepository.findByShiftDateAndEmployeeId(
                                     shiftDay.toInstant(ZoneOffset.UTC),
-                                    shiftDay.plusDays(1).toInstant(ZoneOffset.UTC),
                                     employee.id!!
                                 ).orElseThrow { NoSuchOrderException(orderId) }
 

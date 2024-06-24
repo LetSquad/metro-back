@@ -182,7 +182,7 @@ class OrderDistributionService(
             employeeTimePlanList
         )
 
-        saveAutoDistribution(allTimeEmployeeTimePlanList, planDate)
+//        saveAutoDistribution(allTimeEmployeeTimePlanList, planDate)
 
         val result: List<OrderTime> =
             allTimeEmployeeTimePlanList

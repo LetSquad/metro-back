@@ -50,17 +50,17 @@ class BreakTimeGuesserService {
 
 
         // создаем карту загруженности
-        var start = LocalDateTime.of(planDate, LocalTime.of(6, 0))
-        val finish = LocalDateTime.of(planDate.plusDays(1), LocalTime.of(0, 0))
+        var start = LocalDateTime.of(planDate, LocalTime.of(3, 0))
+        val finish = LocalDateTime.of(planDate, LocalTime.of(22, 0))
 
         val breakTimeList: MutableList<BreakTimeDistribution> = mutableListOf()
         while (start < finish) {
             val ordersBetweenTime =
                 passengerOrderList
                     .filter {
-                        !(it.getOrderTime(addPeriodBeforeOrder) <= start.toInstant(ZoneOffset.UTC)
+                        !(it.orderTime <= start.toInstant(ZoneOffset.UTC)
                                 && it.getSupposedFinishTime() <= start.toInstant(ZoneOffset.UTC)
-                                || it.getOrderTime(addPeriodBeforeOrder) >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC)
+                                || it.orderTime >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC)
                                 && it.getSupposedFinishTime() >= start.plusHours(BREAK_DURATION_HS).toInstant(ZoneOffset.UTC))
 
                     }
@@ -181,7 +181,7 @@ class BreakTimeGuesserService {
                                                         &&
                                                         employeeTimeFreeOn(
                                                             startTime = LocalDateTime.ofInstant(
-                                                                order.getOrderTime(addPeriodBeforeOrder),
+                                                                order.orderTime,
                                                                 TIME_ZONE_UTC
                                                             ),
                                                             finishTime = LocalDateTime.ofInstant(
@@ -195,7 +195,7 @@ class BreakTimeGuesserService {
                                                 it.timePlan.add(
                                                     EmployeeShiftOrder(
                                                         timeStart = LocalDateTime.ofInstant(
-                                                            order.getOrderTime(addPeriodBeforeOrder),
+                                                            order.orderTime,
                                                             TIME_ZONE_UTC
                                                         ),
                                                         timeFinish = LocalDateTime.ofInstant(
