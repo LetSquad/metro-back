@@ -3,6 +3,7 @@ package ru.mosmetro.backend.service
 import jakarta.persistence.EntityNotFoundException
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
+import ru.mosmetro.backend.exception.NoSuchOrderException
 import ru.mosmetro.backend.mapper.EmployeeMapper
 import ru.mosmetro.backend.mapper.EmployeeShiftOrderMapper
 import ru.mosmetro.backend.mapper.OrderMapper
@@ -16,13 +17,17 @@ import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
+import ru.mosmetro.backend.model.entity.EmployeeShiftEntity
 import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
+import ru.mosmetro.backend.model.entity.PassengerOrderEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
 import ru.mosmetro.backend.model.enums.SexType
 import ru.mosmetro.backend.model.enums.TimeListActionType
 import ru.mosmetro.backend.repository.EmployeeShiftEntityRepository
 import ru.mosmetro.backend.repository.EmployeeShiftOrderEntityRepository
+import ru.mosmetro.backend.repository.PassengerOrderEntityRepository
+import ru.mosmetro.backend.repository.PassengerPhoneEntityRepository
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_FINISH
 import ru.mosmetro.backend.util.MetroTimeUtil.METRO_TIME_START
 import ru.mosmetro.backend.util.MetroTimeUtil.MIN_TRANSFER_TIME_PERIOD_SEC
@@ -37,7 +42,6 @@ import java.time.temporal.ChronoUnit
 @Service
 class OrderDistributionService(
     private val timeListService: TimeListService,
-    private val orderService: OrderService,
     private val metroTransfersService: MetroTransfersService,
     private val breakTimeGuesserService: BreakTimeGuesserService,
 
@@ -46,8 +50,26 @@ class OrderDistributionService(
     private val employeeShiftOrderMapper: EmployeeShiftOrderMapper,
 
     private val employeeShiftOrderEntityRepository: EmployeeShiftOrderEntityRepository,
-    private val employeeShiftEntityRepository: EmployeeShiftEntityRepository
+    private val employeeShiftEntityRepository: EmployeeShiftEntityRepository,
+    private val passengerOrderEntityRepository: PassengerOrderEntityRepository,
+    private val passengerPhoneEntityRepository: PassengerPhoneEntityRepository,
 ) {
+
+    // TODO решить проблему с циклической зависимостью
+    fun getOrdersBetweenOrderDate(
+        dateStart: LocalDateTime,
+        dateFinish: LocalDateTime,
+    ): List<PassengerOrder> {
+        return passengerOrderEntityRepository.findAllByOrderTimeBetween(
+            dateStart.toInstant(ZoneOffset.UTC),
+            dateFinish.toInstant(ZoneOffset.UTC)
+        )
+            .map {
+                val passengerPhones = passengerPhoneEntityRepository.findByPassengerId(it.passenger.id!!)
+                    .toSet()
+                orderMapper.entityToDomain(it, passengerPhones)
+            }
+    }
 
     suspend fun calculateOrderDistribution(
         planDate: LocalDate
@@ -78,7 +100,7 @@ class OrderDistributionService(
         val orderStartTime = LocalDateTime.of(planDate, METRO_TIME_START)
         val orderFinishTime = LocalDateTime.of(planDate, METRO_TIME_FINISH)
         val passengerOrderList =
-            orderService.getOrdersBetweenOrderDate(orderStartTime, orderFinishTime)
+            getOrdersBetweenOrderDate(orderStartTime, orderFinishTime)
                 .filter { it.orderStatus.code != OrderStatusType.CANCELED && it.orderStatus.code != OrderStatusType.REJECTED }
                 .sortedWith(compareBy({ it.getOrderTime(addPeriodBeforeOrder) }, { it.createdAt }))
 
@@ -182,8 +204,6 @@ class OrderDistributionService(
             employeeTimePlanList
         )
 
-//        saveAutoDistribution(allTimeEmployeeTimePlanList, planDate)
-
         val result: List<OrderTime> =
             allTimeEmployeeTimePlanList
                 .map {
@@ -199,6 +219,8 @@ class OrderDistributionService(
                     return@map OrderTime(it.employee, truncateSecondsPlan)
                 }.toList()
 
+        saveDistribution(result, planDate)
+
         val orderTimeList = result
             .map {
                 OrderTimeDTO(
@@ -213,7 +235,7 @@ class OrderDistributionService(
         )
     }
 
-    private fun saveAutoDistribution(
+    private fun saveDistribution(
         orderTimeList: List<OrderTime>,
         planDate: LocalDate
     ) {
@@ -222,12 +244,16 @@ class OrderDistributionService(
                 employeeShiftEntityRepository.findByShiftDateAndEmployeeId(planDate.atStartOfDay().toInstant(ZoneOffset.UTC), orderTime.employee.id!!)
                     .orElseThrow{EntityNotFoundException("employeeShift not found for employee ${orderTime.employee.id} on date $planDate")}
 
-            orderTime.timePlan.forEach {timePlan ->
+            deleteOldDistribution(employeeShift)
+
+            orderTime.timePlan
+                .filter { it.actionType != TimeListActionType.DOWNTIME && it.actionType != TimeListActionType.NON_WORKING }
+                .forEach { timePlan ->
                 val entity =
                     EmployeeShiftOrderEntity(
                         id = null,
                         employeeShift = employeeShift,
-                        order = timePlan.order?.let { orderService.getOrderEntityById(timePlan.order.id!!) },
+                        order = timePlan.order?.let { getOrderEntityById(timePlan.order.id!!) },
                         isAttached = false,
                         actionType = timePlan.actionType.name,
                         timeStart = timePlan.timeStart.toInstant(ZoneOffset.UTC),
@@ -238,6 +264,19 @@ class OrderDistributionService(
                 employeeShiftOrderEntityRepository.save(entity)
             }
         }
+    }
+
+    // TODO решить проблему с циклической зависимостью
+    fun getOrderEntityById(id: Long): PassengerOrderEntity {
+        return passengerOrderEntityRepository.findById(id)
+            .orElseThrow { NoSuchOrderException(id) }
+    }
+
+    private fun deleteOldDistribution(
+        employeeShift: EmployeeShiftEntity
+    ) {
+        employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!)
+            .let{ employeeShiftOrderEntityRepository.deleteAll(it) }
     }
 
     private fun addBusyTimeToTimePlan(

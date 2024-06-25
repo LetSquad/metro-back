@@ -56,7 +56,6 @@ class TimeListService(
                 .map { employeeShift ->
                     val actionOrderTimeList =
                         jpaContext { employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!) }
-                            .filter { it.isAttached }
                             .map {
                                 val passengerPhones = passengerService.passengerPhoneCache.getOrElse(it.order?.id) { emptyList() }
                                     .toSet()
