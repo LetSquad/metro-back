@@ -50,6 +50,7 @@ class OrderService(
     private val employeeMapper: EmployeeMapper,
     private val metroService: MetroService,
     private val metroStationMapper: MetroStationMapper,
+    private val orderDistributionService: OrderDistributionService,
 ) {
 
     /**
@@ -295,6 +296,11 @@ class OrderService(
                             )
 
                             employeeShiftOrderEntityRepository.save(employeeShiftTimeOrder)
+
+                            // перерасчитываем график
+                            orderDistributionService.calculateOrderDistribution(
+                                LocalDateTime.ofInstant(orderEntity.orderTime, MetroTimeUtil.TIME_ZONE_UTC).toLocalDate()
+                            )
                         }
                     }
             }
