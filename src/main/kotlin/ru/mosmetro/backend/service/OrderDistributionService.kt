@@ -16,6 +16,7 @@ import ru.mosmetro.backend.model.domain.PassengerOrder
 import ru.mosmetro.backend.model.dto.ListWithTotal
 import ru.mosmetro.backend.model.dto.order.OrderTimeDTO
 import ru.mosmetro.backend.model.dto.order.OrderTimeListDTO
+import ru.mosmetro.backend.model.entity.EmployeeShiftEntity
 import ru.mosmetro.backend.model.entity.EmployeeShiftOrderEntity
 import ru.mosmetro.backend.model.enums.OrderStatusType
 import ru.mosmetro.backend.model.enums.PassengerCategoryType
@@ -182,8 +183,6 @@ class OrderDistributionService(
             employeeTimePlanList
         )
 
-//        saveAutoDistribution(allTimeEmployeeTimePlanList, planDate)
-
         val result: List<OrderTime> =
             allTimeEmployeeTimePlanList
                 .map {
@@ -199,6 +198,8 @@ class OrderDistributionService(
                     return@map OrderTime(it.employee, truncateSecondsPlan)
                 }.toList()
 
+        saveDistribution(result, planDate)
+
         val orderTimeList = result
             .map {
                 OrderTimeDTO(
@@ -213,7 +214,7 @@ class OrderDistributionService(
         )
     }
 
-    private fun saveAutoDistribution(
+    private fun saveDistribution(
         orderTimeList: List<OrderTime>,
         planDate: LocalDate
     ) {
@@ -222,7 +223,11 @@ class OrderDistributionService(
                 employeeShiftEntityRepository.findByShiftDateAndEmployeeId(planDate.atStartOfDay().toInstant(ZoneOffset.UTC), orderTime.employee.id!!)
                     .orElseThrow{EntityNotFoundException("employeeShift not found for employee ${orderTime.employee.id} on date $planDate")}
 
-            orderTime.timePlan.forEach {timePlan ->
+            deleteOldDistribution(employeeShift)
+
+            orderTime.timePlan
+                .filter { it.actionType != TimeListActionType.DOWNTIME && it.actionType != TimeListActionType.NON_WORKING }
+                .forEach { timePlan ->
                 val entity =
                     EmployeeShiftOrderEntity(
                         id = null,
@@ -238,6 +243,14 @@ class OrderDistributionService(
                 employeeShiftOrderEntityRepository.save(entity)
             }
         }
+    }
+
+    private fun deleteOldDistribution(
+        employeeShift: EmployeeShiftEntity
+    ) {
+        employeeShiftOrderEntityRepository.findAllByEmployeeShiftId(employeeShift.id!!)
+            .filter { !it.isAttached }
+            .let{ employeeShiftOrderEntityRepository.deleteAll(it) }
     }
 
     private fun addBusyTimeToTimePlan(
